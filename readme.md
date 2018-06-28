@@ -1,3 +1,6 @@
+[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/coveo/spring-boot-parameter-store-integration/blob/master/LICENSE)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.coveo/spring-boot-parameter-store-integration/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.coveo/spring-boot-parameter-store-integration)
+
 # Spring Boot Parameter Store Integration
 
 The Spring Boot Parameter Store Integration is a tiny library used to integrate AWS Parameter Store in Spring Boot's powerful property injection. For example, it allows you to fetch a property directly using the `@Value` annotation. In fact, it simply adds a PropertySource with highest precedence to the existing ones (see [Spring Boot's External Configuration](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html)).
@@ -28,8 +31,8 @@ The library was tested and worked properly with:
 
 #### There are 3 ways to enable this lib after importing it in your pom.xml, pick yours:
 - Set `awsParameterStorePropertySource.enabled` to `true` (yml, properties, or anything [here](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html))
-- Add the profile `awsParameterStorePropertySourceEnabled`
-- Add some custom profiles that should integrate the AWS Parameter Store with a comma-separated list such as `MyProductionProfile,MyTestProfile`.  
+- Add the profile `awsParameterStorePropertySourceEnabled` to your active profiles
+- Set `awsParameterStorePropertySource.enabledProfiles` with some custom profiles that should integrate the AWS Parameter Store using a comma-separated list such as `MyProductionProfile,MyTestProfile`  
 **Important**: using other list injecting methods like a yaml list won't work because this property gets loaded too early in the boot process.
 
 #### Using the lib:
