@@ -1,3 +1,4 @@
+[![Build Status](https://api.travis-ci.org/coveo/spring-boot-parameter-store-integration.svg?branch=master)](https://travis-ci.org/coveo/spring-boot-parameter-store-integration)
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/coveo/spring-boot-parameter-store-integration/blob/master/LICENSE)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.coveo/spring-boot-parameter-store-integration/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.coveo/spring-boot-parameter-store-integration)
 

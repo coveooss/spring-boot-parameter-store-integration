@@ -1,5 +1,6 @@
 package com.coveo.configuration.parameterstore;
 
+import static com.amazonaws.SDKGlobalConfiguration.*;
 import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -18,6 +19,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
 {
     private static final String[] EMPTY_CUSTOM_PROFILES = new String[] {};
     private static final String[] CUSTOM_PROFILES = new String[] { "open", "source", "this" };
+
     @Mock
     private ConfigurableEnvironment configurableEnvironmentMock;
     @Mock
@@ -39,6 +41,10 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
+
+        System.setProperty(ACCESS_KEY_ENV_VAR, "id");
+        System.setProperty(SECRET_KEY_ENV_VAR, "secret");
+        System.setProperty(AWS_REGION_SYSTEM_PROPERTY, "region");
     }
 
     @Test
