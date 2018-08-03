@@ -81,3 +81,5 @@ Spring Cloud has a second application context named bootstrap that gets initiali
 Open an issue to report bugs or to request additional features. Pull requests are always welcome.
 
 # Enjoy 🍻
+
+__UPDATE:__ I wrote a [blog post](https://source.coveo.com/2018/08/03/spring-boot-and-aws-parameter-store/) about this library on our technical blog.
