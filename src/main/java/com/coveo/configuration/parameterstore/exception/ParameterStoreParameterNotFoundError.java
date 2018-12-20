@@ -2,11 +2,11 @@ package com.coveo.configuration.parameterstore.exception;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 
-public class ParameterStoreParameterNotFoundRuntimeException extends RuntimeException
+public class ParameterStoreParameterNotFoundError extends Error
 {
     private static final long serialVersionUID = 1L;
 
-    public ParameterStoreParameterNotFoundRuntimeException(String propertyName, Exception e)
+    public ParameterStoreParameterNotFoundError(String propertyName, Exception e)
     {
         super(String.format("Properties prefixed with a '%s' are reserved for the AWS Parameter Store. "
                 + "The property '%s' was not found in it. "
