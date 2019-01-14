@@ -1,10 +1,10 @@
 package com.coveo.configuration.parameterstore.exception;
 
-public class ParameterStoreRuntimeException extends RuntimeException
+public class ParameterStoreError extends Error
 {
     private static final long serialVersionUID = 1L;
 
-    public ParameterStoreRuntimeException(String propertyName, Exception e)
+    public ParameterStoreError(String propertyName, Exception e)
     {
         super(String.format("Accessing Parameter Store for parameter '%s' failed.", propertyName), e);
     }

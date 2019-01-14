@@ -15,8 +15,8 @@ import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
 import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult;
 import com.amazonaws.services.simplesystemsmanagement.model.Parameter;
 import com.amazonaws.services.simplesystemsmanagement.model.ParameterNotFoundException;
-import com.coveo.configuration.parameterstore.exception.ParameterStoreParameterNotFoundRuntimeException;
-import com.coveo.configuration.parameterstore.exception.ParameterStoreRuntimeException;
+import com.coveo.configuration.parameterstore.exception.ParameterStoreError;
+import com.coveo.configuration.parameterstore.exception.ParameterStoreParameterNotFoundError;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ParameterStoreSourceTest
@@ -57,7 +57,7 @@ public class ParameterStoreSourceTest
         assertThat(value, is(nullValue()));
     }
 
-    @Test(expected = ParameterStoreRuntimeException.class)
+    @Test(expected = ParameterStoreError.class)
     public void shouldThrowOnUnexpectedExceptionAccessingParameterStore()
     {
         when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenThrow(new RuntimeException());
@@ -65,7 +65,7 @@ public class ParameterStoreSourceTest
         parameterStoreSource.getProperty(VALID_PROPERTY_NAME);
     }
 
-    @Test(expected = ParameterStoreParameterNotFoundRuntimeException.class)
+    @Test(expected = ParameterStoreParameterNotFoundError.class)
     public void shouldThrowOnGetPropertyWhenNotFoundAndHaltBootIsTrue()
     {
         when(ssmClientMock.getParameter(getParameterRequest(INVALID_PROPERTY_NAME))).thenThrow(new ParameterNotFoundException(""));
