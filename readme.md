@@ -26,7 +26,7 @@ The library was tested and worked properly with:
 <dependency>
     <groupId>com.coveo</groupId>
     <artifactId>spring-boot-parameter-store-integration</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
@@ -46,9 +46,11 @@ String value;
 #### You might be wondering why use slashes (`/`)?
 The AWS Parameter Store already uses this naming pattern to classify your properties as you would do with folders. Using this prefix to limit the number of calls to AWS at boot seemed natural. This means properties not prefixed with `/` can't yet be fetched in the AWS Parameter Store using this lib.
 
-## AWS Credentials
+## AWS Client
 
-The lib uses the [DefaultAWSCredentialProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html). This means if your code is running on an EC2 instance that has access to a Parameter Store property and its associated KMS key, the library should be able to fetch it without any configuration.
+The lib uses the [DefaultAWSCredentialProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html) and the [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html). This means if your code is running on an EC2 instance that has access to a Parameter Store property and its associated KMS key, the library should be able to fetch it without any configuration.
+
+If you are using a VPC and would like to configure the AWS Simple Systems Management client to use a custom endpoint, you can set the property `awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint`. See the [AWSClientBuilder.EndpointConfiguration](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/client/builder/AwsClientBuilder.EndpointConfiguration.html) class which is used to configure the client for more details. By default the associated signing region is fetched from [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html), but if you need to specify a different one you can use the property `awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion`. Note that this only sets the signingRegion for the endpoint and not the aws client region. Region configuration should be done using the different providers available from the [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html).
 
 ## Using Spring Boot's Placeholder Properties
 

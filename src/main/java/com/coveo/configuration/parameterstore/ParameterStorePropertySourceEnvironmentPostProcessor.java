@@ -5,6 +5,9 @@ import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.ObjectUtils;
 
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
+import com.amazonaws.regions.DefaultAwsRegionProviderChain;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 
 public class ParameterStorePropertySourceEnvironmentPostProcessor implements EnvironmentPostProcessor
@@ -14,6 +17,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
     static final String PARAMETER_STORE_ACCEPTED_PROFILES_CONFIGURATION_PROPERTY = "awsParameterStorePropertySource.enabledProfiles";
     static final String PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY = "awsParameterStorePropertySource.enabled";
     static final String PARAMETER_STORE_HALT_BOOT_CONFIGURATION_PROPERTY = "awsParameterStorePropertySource.haltBoot";
+    static final String PARAMETER_STORE_CLIENT_ENDPOINT_CONFIGURATION_PROPERTY = "awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint";
+    static final String PARAMETER_STORE_CLIENT_ENDPOINT_SIGNING_REGION_CONFIGURATION_PROPERTY = "awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion";
 
     private static final String PARAMETER_STORE_PROPERTY_SOURCE_NAME = "AWSParameterStorePropertySource";
 
@@ -25,7 +30,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
         if (!initialized && isParameterStorePropertySourceEnabled(environment)) {
             environment.getPropertySources()
                        .addFirst(new ParameterStorePropertySource(PARAMETER_STORE_PROPERTY_SOURCE_NAME,
-                                                                  new ParameterStoreSource(AWSSimpleSystemsManagementClientBuilder.defaultClient(),
+                                                                  new ParameterStoreSource(buildAWSSimpleSystemsManagementClient(environment),
                                                                                            environment.getProperty(PARAMETER_STORE_HALT_BOOT_CONFIGURATION_PROPERTY,
                                                                                                                    Boolean.class,
                                                                                                                    Boolean.FALSE))));
@@ -41,5 +46,17 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
                 || environment.acceptsProfiles(PARAMETER_STORE_ACCEPTED_PROFILE)
                 || (!ObjectUtils.isEmpty(userDefinedEnabledProfiles)
                         && environment.acceptsProfiles(userDefinedEnabledProfiles));
+    }
+
+    private AWSSimpleSystemsManagement buildAWSSimpleSystemsManagementClient(ConfigurableEnvironment environment)
+    {
+        if (environment.containsProperty(PARAMETER_STORE_CLIENT_ENDPOINT_CONFIGURATION_PROPERTY)) {
+            return AWSSimpleSystemsManagementClientBuilder.standard()
+                                                          .withEndpointConfiguration(new EndpointConfiguration(environment.getProperty(PARAMETER_STORE_CLIENT_ENDPOINT_CONFIGURATION_PROPERTY),
+                                                                                                               environment.getProperty(PARAMETER_STORE_CLIENT_ENDPOINT_SIGNING_REGION_CONFIGURATION_PROPERTY,
+                                                                                                                                       new DefaultAwsRegionProviderChain().getRegion())))
+                                                          .build();
+        }
+        return AWSSimpleSystemsManagementClientBuilder.defaultClient();
     }
 }
