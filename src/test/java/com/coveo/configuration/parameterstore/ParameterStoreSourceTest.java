@@ -10,6 +10,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.amazonaws.ResponseMetadata;
+import com.amazonaws.http.SdkHttpMetadata;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
 import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult;
@@ -28,19 +30,25 @@ public class ParameterStoreSourceTest
 
     @Mock
     private AWSSimpleSystemsManagement ssmClientMock;
+    @Mock
+    private SdkHttpMetadata sdkHttpMetadataMock;
+    @Mock
+    private ResponseMetadata responseMetadataMock;
 
     private ParameterStoreSource parameterStoreSource;
 
     @Before
     public void setUp()
     {
+        when(sdkHttpMetadataMock.getHttpStatusCode()).thenReturn(200);
+
         parameterStoreSource = new ParameterStoreSource(ssmClientMock, false);
     }
 
     @Test
     public void testGetProperty()
     {
-        when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenReturn(new GetParameterResult().withParameter(new Parameter().withValue(VALID_PROPERTY_VALUE)));
+        when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenReturn(getGetParameterResult().withParameter(new Parameter().withValue(VALID_PROPERTY_VALUE)));
 
         Object value = parameterStoreSource.getProperty(VALID_PROPERTY_NAME);
 
@@ -72,6 +80,42 @@ public class ParameterStoreSourceTest
         ParameterStoreSource parameterStoreSourceHaltingBoot = new ParameterStoreSource(ssmClientMock, true);
 
         parameterStoreSourceHaltingBoot.getProperty(INVALID_PROPERTY_NAME);
+    }
+
+    @Test(expected = ParameterStoreError.class)
+    public void shouldThrowWhenStatusCodeIsNot200()
+    {
+        when(sdkHttpMetadataMock.getHttpStatusCode()).thenReturn(503);
+        when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenReturn(getGetParameterResult());
+        ParameterStoreSource parameterStoreSourceHaltingBoot = new ParameterStoreSource(ssmClientMock, true);
+
+        parameterStoreSourceHaltingBoot.getProperty(VALID_PROPERTY_NAME);
+    }
+
+    @Test(expected = ParameterStoreError.class)
+    public void shouldThrowWhenParameterIsNull()
+    {
+        when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenReturn(getGetParameterResult());
+        ParameterStoreSource parameterStoreSourceHaltingBoot = new ParameterStoreSource(ssmClientMock, true);
+
+        parameterStoreSourceHaltingBoot.getProperty(VALID_PROPERTY_NAME);
+    }
+
+    @Test(expected = ParameterStoreError.class)
+    public void shouldThrowWhenParameterValueIsNull()
+    {
+        when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenReturn(getGetParameterResult().withParameter(new Parameter()));
+        ParameterStoreSource parameterStoreSourceHaltingBoot = new ParameterStoreSource(ssmClientMock, true);
+
+        parameterStoreSourceHaltingBoot.getProperty(VALID_PROPERTY_NAME);
+    }
+
+    private GetParameterResult getGetParameterResult()
+    {
+        GetParameterResult getParameterResult = new GetParameterResult();
+        getParameterResult.setSdkHttpMetadata(sdkHttpMetadataMock);
+        getParameterResult.setSdkResponseMetadata(responseMetadataMock);
+        return getParameterResult;
     }
 
     private GetParameterRequest getParameterRequest(String parameterName)
