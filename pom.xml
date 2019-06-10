@@ -5,7 +5,7 @@
 
     <groupId>com.coveo</groupId>
     <artifactId>spring-boot-parameter-store-integration</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
 
     <name>Spring Boot Parameter Store Integration</name>
     <description>An integration of Amazon Web Services' Systems Manager Parameter Store for Spring Boot's properties injection.</description>
@@ -41,7 +41,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
-                <version>2.9.8</version>
+                <version>2.9.9</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -52,19 +52,19 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
-            <version>1.5.14.RELEASE</version>
+            <version>1.5.21.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-ssm</artifactId>
-            <version>1.11.351</version>
+            <version>1.11.566</version>
         </dependency>
 
         <!-- Test libraries -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>1.5.14.RELEASE</version>
+            <version>1.5.21.RELEASE</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
