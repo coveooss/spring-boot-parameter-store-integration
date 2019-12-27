@@ -40,7 +40,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_HALT_BOOT_CONFIGURATION_PROPERTY,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_DISABLE_MULTIPLE_CONTEXT_CONFIGURATION_PROPERTY,
+        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
@@ -144,7 +144,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_DISABLE_MULTIPLE_CONTEXT_CONFIGURATION_PROPERTY,
+        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.TRUE);
 

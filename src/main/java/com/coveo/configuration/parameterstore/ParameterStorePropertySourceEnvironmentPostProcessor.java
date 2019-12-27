@@ -19,7 +19,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
     static final String PARAMETER_STORE_HALT_BOOT_CONFIGURATION_PROPERTY = "awsParameterStorePropertySource.haltBoot";
     static final String PARAMETER_STORE_CLIENT_ENDPOINT_CONFIGURATION_PROPERTY = "awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint";
     static final String PARAMETER_STORE_CLIENT_ENDPOINT_SIGNING_REGION_CONFIGURATION_PROPERTY = "awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion";
-    static final String PARAMETER_STORE_DISABLE_MULTIPLE_CONTEXT_CONFIGURATION_PROPERTY = "awsParameterStorePropertySource.disableMultipleContextSupport";
+    static final String PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY = "awsParameterStorePropertySource.supportMultipleApplicationContexts";
 
     private static final String PARAMETER_STORE_PROPERTY_SOURCE_NAME = "AWSParameterStorePropertySource";
 
@@ -35,7 +35,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
                                                                                            environment.getProperty(PARAMETER_STORE_HALT_BOOT_CONFIGURATION_PROPERTY,
                                                                                                                    Boolean.class,
                                                                                                                    Boolean.FALSE))));
-            if (!environment.getProperty(PARAMETER_STORE_DISABLE_MULTIPLE_CONTEXT_CONFIGURATION_PROPERTY,
+            if (!environment.getProperty(PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY,
                                          Boolean.class,
                                          Boolean.FALSE)) {
                 initialized = true;
