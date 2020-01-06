@@ -40,6 +40,9 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_HALT_BOOT_CONFIGURATION_PROPERTY,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
+        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY,
+                                                     Boolean.class,
+                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
 
         System.setProperty(ACCESS_KEY_ENV_VAR, "id");
@@ -133,5 +136,24 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verify(mutablePropertySourcesMock, times(1)).addFirst(any(ParameterStorePropertySource.class));
+    }
+
+    @Test
+    public void testParameterStorePropertySourceEnvironmentPostProcessorCanBeCalledTwiceWhenDiablingMultipleContextSupport()
+    {
+        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY,
+                                                     Boolean.class,
+                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
+        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY,
+                                                     Boolean.class,
+                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
+
+        parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
+                                                                                    applicationMock);
+
+        parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
+                                                                                    applicationMock);
+
+        verify(mutablePropertySourcesMock, times(2)).addFirst(any(ParameterStorePropertySource.class));
     }
 }
