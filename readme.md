@@ -81,6 +81,12 @@ Spring Cloud has a second application context named bootstrap that gets initiali
 
 If you still want the post processor to run twice or if you are using [spring-boot-devtools](https://docs.spring.io/spring-boot/docs/current/reference/html/using-spring-boot.html#using-boot-devtools-restart), you can set the optional property `awsParameterStorePropertySource.supportMultipleApplicationContexts` to `true`. The default property value is `false`to prevent multiple initializations. If you are also using Spring Cloud, this property will only work if set in the bootstrap properties.
 
+## Multi-region
+- Set `awsParameterStoreSource.ssmClient.multiRegion.enabled` to `true` (yml, properties, or anything [here](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html))
+- Set `awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegions` with the regions from which you need to retrieve parameters using a **comma-separated** list such as `us-east-1,us-east-2`. If not specified, it will fallback on `awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion`, if present, or the associated signing region fetched from [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html). It adds a PropertySource for each region specified. It will start looking from the first region and so on until it finds the property so put the regions in order of precedence.  
+**Reminder**: using other list injecting methods like a yaml list won't work because this property gets loaded too early in the boot process.
+- If you want to halt the boot when a property isn't found in any of the specified regions, just set `awsParameterStorePropertySource.haltBoot` to `true` in your properties.
+
 ## Contributing
 Open an issue to report bugs or to request additional features. Pull requests are always welcome.
 
