@@ -1,9 +1,22 @@
 package com.coveo.configuration.parameterstore;
 
-import static com.amazonaws.SDKGlobalConfiguration.*;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static com.amazonaws.SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR;
+import static com.amazonaws.SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY;
+import static com.amazonaws.SDKGlobalConfiguration.SECRET_KEY_ENV_VAR;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_ACCEPTED_PROFILE;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_ACCEPTED_PROFILES_CONFIGURATION_PROPERTY;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_CLIENT_ENDPOINT_SIGNING_REGIONS_CONFIGURATION_PROPERTY;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_HALT_BOOT_CONFIGURATION_PROPERTY;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_MULTI_REGION_ENABLED_CONFIGURATION_PROPERTY;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +54,9 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
         when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY,
+                                                     Boolean.class,
+                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
+        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_MULTI_REGION_ENABLED_CONFIGURATION_PROPERTY,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
@@ -139,7 +155,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testParameterStorePropertySourceEnvironmentPostProcessorCanBeCalledTwiceWhenDiablingMultipleContextSupport()
+    public void testParameterStorePropertySourceEnvironmentPostProcessorCanBeCalledTwiceWhenDisablingMultipleContextSupport()
     {
         when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY,
                                                      Boolean.class,
@@ -150,6 +166,25 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
+
+        parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
+                                                                                    applicationMock);
+
+        verify(mutablePropertySourcesMock, times(2)).addFirst(any(ParameterStorePropertySource.class));
+    }
+
+    @Test
+    public void testWhenMultiRegionIsEnabled()
+    {
+        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY,
+                                                     Boolean.class,
+                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
+        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_MULTI_REGION_ENABLED_CONFIGURATION_PROPERTY,
+                                                     Boolean.class,
+                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
+        when(configurableEnvironmentMock.getProperty(eq(PARAMETER_STORE_CLIENT_ENDPOINT_SIGNING_REGIONS_CONFIGURATION_PROPERTY),
+                                                     any(),
+                                                     any())).thenReturn(new String[] { "region-1", "region-2" });
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
