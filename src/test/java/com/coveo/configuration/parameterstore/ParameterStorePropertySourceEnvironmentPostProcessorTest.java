@@ -1,17 +1,9 @@
 package com.coveo.configuration.parameterstore;
 
-import static com.amazonaws.SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR;
-import static com.amazonaws.SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY;
-import static com.amazonaws.SDKGlobalConfiguration.SECRET_KEY_ENV_VAR;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_ACCEPTED_PROFILE;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_ACCEPTED_PROFILES_CONFIGURATION_PROPERTY;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_CLIENT_ENDPOINT_SIGNING_REGIONS_CONFIGURATION_PROPERTY;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_HALT_BOOT_CONFIGURATION_PROPERTY;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_MULTI_REGION_ENABLED_CONFIGURATION_PROPERTY;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceEnvironmentPostProcessor.PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.ACCEPTED_PROFILE;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.ACCEPTED_PROFILES;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.ENABLED;
+import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.SUPPORT_MULTIPLE_APPLICATION_CONTEXTS;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -25,7 +17,10 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.MutablePropertySources;
+
+import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceEnvironmentPostProcessStrategy;
+import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory;
+import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceEnvironmentPostProcessStrategyFactoryImpl;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ParameterStorePropertySourceEnvironmentPostProcessorTest
@@ -36,9 +31,13 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Mock
     private ConfigurableEnvironment configurableEnvironmentMock;
     @Mock
-    private MutablePropertySources mutablePropertySourcesMock;
-    @Mock
     private SpringApplication applicationMock;
+    @Mock
+    private ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory postProcessStrategyFactoryMock;
+    @Mock
+    private ParameterStorePropertySourceEnvironmentPostProcessStrategy defaultPostProcessStrategyMock;
+    @Mock
+    private ParameterStorePropertySourceEnvironmentPostProcessStrategy multiRegionPostProcessStrategyMock;
 
     private ParameterStorePropertySourceEnvironmentPostProcessor parameterStorePropertySourceEnvironmentPostProcessor = new ParameterStorePropertySourceEnvironmentPostProcessor();
 
@@ -47,23 +46,14 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     {
         ParameterStorePropertySourceEnvironmentPostProcessor.initialized = false;
 
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_HALT_BOOT_CONFIGURATION_PROPERTY,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_MULTI_REGION_ENABLED_CONFIGURATION_PROPERTY,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
-        when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
+        when(postProcessStrategyFactoryMock.getStrategy(ParameterStorePropertySourceEnvironmentPostProcessStrategyFactoryImpl.DEFAULT_STRATEGY)).thenReturn(defaultPostProcessStrategyMock);
+        when(postProcessStrategyFactoryMock.getStrategy(ParameterStorePropertySourceEnvironmentPostProcessStrategyFactoryImpl.MULTI_REGION_STRATEGY)).thenReturn(multiRegionPostProcessStrategyMock);
+        ParameterStorePropertySourceEnvironmentPostProcessor.postProcessStrategyFactory = postProcessStrategyFactoryMock;
 
-        System.setProperty(ACCESS_KEY_ENV_VAR, "id");
-        System.setProperty(SECRET_KEY_ENV_VAR, "secret");
-        System.setProperty(AWS_REGION_SYSTEM_PROPERTY, "region");
+        when(configurableEnvironmentMock.getProperty(ENABLED, Boolean.class, Boolean.FALSE)).thenReturn(Boolean.FALSE);
+        when(configurableEnvironmentMock.getProperty(SUPPORT_MULTIPLE_APPLICATION_CONTEXTS,
+                                                     Boolean.class,
+                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
     }
 
     @Test
@@ -72,78 +62,74 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verifyZeroInteractions(mutablePropertySourcesMock);
+        verifyZeroInteractions(applicationMock);
+        verifyZeroInteractions(defaultPostProcessStrategyMock);
+        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
     }
 
     @Test
     public void testParameterStoreIsEnabledWithPropertySetToTrue()
     {
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
+        when(configurableEnvironmentMock.getProperty(ENABLED, Boolean.class, Boolean.FALSE)).thenReturn(Boolean.TRUE);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
+        verify(defaultPostProcessStrategyMock).postProcess(configurableEnvironmentMock);
     }
 
     @Test
     public void testParameterStoreIsEnabledWithProfile()
     {
-        when(configurableEnvironmentMock.acceptsProfiles(PARAMETER_STORE_ACCEPTED_PROFILE)).thenReturn(true);
+        when(configurableEnvironmentMock.acceptsProfiles(ACCEPTED_PROFILE)).thenReturn(true);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
+        verify(defaultPostProcessStrategyMock).postProcess(configurableEnvironmentMock);
     }
 
     @Test
     public void testParameterStoreIsEnabledWithCustomProfiles()
     {
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ACCEPTED_PROFILES_CONFIGURATION_PROPERTY,
-                                                     String[].class)).thenReturn(CUSTOM_PROFILES);
+        when(configurableEnvironmentMock.getProperty(ACCEPTED_PROFILES, String[].class)).thenReturn(CUSTOM_PROFILES);
         when(configurableEnvironmentMock.acceptsProfiles(CUSTOM_PROFILES)).thenReturn(true);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
+        verify(defaultPostProcessStrategyMock).postProcess(configurableEnvironmentMock);
     }
 
     @Test
     public void testParameterStoreIsNotEnabledWithCustomProfilesEmpty()
     {
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ACCEPTED_PROFILES_CONFIGURATION_PROPERTY,
+        when(configurableEnvironmentMock.getProperty(ACCEPTED_PROFILES,
                                                      String[].class)).thenReturn(EMPTY_CUSTOM_PROFILES);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
         verify(configurableEnvironmentMock, never()).acceptsProfiles(EMPTY_CUSTOM_PROFILES);
-        verifyZeroInteractions(mutablePropertySourcesMock);
+        verifyZeroInteractions(defaultPostProcessStrategyMock);
     }
 
     @Test
     public void testParameterStoreIsNotEnabledWithCustomProfilesButNoneOfTheProfilesActive()
     {
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ACCEPTED_PROFILES_CONFIGURATION_PROPERTY,
-                                                     String[].class)).thenReturn(CUSTOM_PROFILES);
+        when(configurableEnvironmentMock.getProperty(ACCEPTED_PROFILES, String[].class)).thenReturn(CUSTOM_PROFILES);
         when(configurableEnvironmentMock.acceptsProfiles(CUSTOM_PROFILES)).thenReturn(false);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verifyZeroInteractions(mutablePropertySourcesMock);
+        verifyZeroInteractions(defaultPostProcessStrategyMock);
     }
 
     @Test
     public void testParameterStorePropertySourceEnvironmentPostProcessorCantBeCalledTwice()
     {
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
+        when(configurableEnvironmentMock.getProperty(ENABLED, Boolean.class, Boolean.FALSE)).thenReturn(Boolean.TRUE);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
@@ -151,16 +137,14 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(mutablePropertySourcesMock, times(1)).addFirst(any(ParameterStorePropertySource.class));
+        verify(defaultPostProcessStrategyMock).postProcess(configurableEnvironmentMock);
     }
 
     @Test
     public void testParameterStorePropertySourceEnvironmentPostProcessorCanBeCalledTwiceWhenDisablingMultipleContextSupport()
     {
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_SUPPORT_MULTIPLE_APPLICATION_CONTEXTS_CONFIGURATION_PROPERTY,
+        when(configurableEnvironmentMock.getProperty(ENABLED, Boolean.class, Boolean.FALSE)).thenReturn(Boolean.TRUE);
+        when(configurableEnvironmentMock.getProperty(SUPPORT_MULTIPLE_APPLICATION_CONTEXTS,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.TRUE);
 
@@ -170,25 +154,18 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(mutablePropertySourcesMock, times(2)).addFirst(any(ParameterStorePropertySource.class));
+        verify(defaultPostProcessStrategyMock, times(2)).postProcess(configurableEnvironmentMock);
     }
 
     @Test
     public void testWhenMultiRegionIsEnabled()
     {
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_ENABLED_CONFIGURATION_PROPERTY,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(PARAMETER_STORE_MULTI_REGION_ENABLED_CONFIGURATION_PROPERTY,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(eq(PARAMETER_STORE_CLIENT_ENDPOINT_SIGNING_REGIONS_CONFIGURATION_PROPERTY),
-                                                     any(),
-                                                     any())).thenReturn(new String[] { "region-1", "region-2" });
+        when(configurableEnvironmentMock.getProperty(ENABLED, Boolean.class, Boolean.FALSE)).thenReturn(Boolean.TRUE);
+        when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_SIGNING_REGIONS)).thenReturn(Boolean.TRUE);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(mutablePropertySourcesMock, times(2)).addFirst(any(ParameterStorePropertySource.class));
+        verify(multiRegionPostProcessStrategyMock, times(1)).postProcess(configurableEnvironmentMock);
     }
 }
