@@ -1,8 +1,5 @@
 package com.coveo.configuration.parameterstore.strategy;
 
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_ENDPOINT_CONFIG_ENDPOINT;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_ENDPOINT_CONFIG_SIGNING_REGION;
-
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
@@ -56,16 +53,17 @@ public class DefaultParameterStorePropertySourceEnvironmentPostProcessStrategy
 
     private boolean hasCustomEndpoint(ConfigurableEnvironment environment)
     {
-        return environment.containsProperty(SSM_CLIENT_ENDPOINT_CONFIG_ENDPOINT);
+        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_CUSTOM_ENDPOINT);
     }
 
     private String getCustomEndpoint(ConfigurableEnvironment environment)
     {
-        return environment.getProperty(SSM_CLIENT_ENDPOINT_CONFIG_ENDPOINT);
+        return environment.getProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_CUSTOM_ENDPOINT);
     }
 
     private String getSigningRegion(ConfigurableEnvironment environment)
     {
-        return environment.getProperty(SSM_CLIENT_ENDPOINT_CONFIG_SIGNING_REGION, awsRegionProviderChain.getRegion());
+        return environment.getProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_SIGNING_REGION,
+                                       awsRegionProviderChain.getRegion());
     }
 }

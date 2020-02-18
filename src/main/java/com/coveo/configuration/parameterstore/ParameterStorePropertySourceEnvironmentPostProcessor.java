@@ -1,8 +1,5 @@
 package com.coveo.configuration.parameterstore;
 
-import static com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceEnvironmentPostProcessStrategyFactoryImpl.DEFAULT_STRATEGY;
-import static com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceEnvironmentPostProcessStrategyFactoryImpl.MULTI_REGION_STRATEGY;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -10,12 +7,12 @@ import org.springframework.util.ObjectUtils;
 
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceEnvironmentPostProcessStrategy;
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory;
-import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceEnvironmentPostProcessStrategyFactoryImpl;
+import com.coveo.configuration.parameterstore.strategy.StrategyType;
 
 public class ParameterStorePropertySourceEnvironmentPostProcessor implements EnvironmentPostProcessor
 {
     static boolean initialized;
-    static ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory postProcessStrategyFactory = new ParameterStorePropertySourceEnvironmentPostProcessStrategyFactoryImpl();
+    protected static ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory postProcessStrategyFactory = new ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory();
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application)
@@ -31,7 +28,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
 
     private ParameterStorePropertySourceEnvironmentPostProcessStrategy getPostProcessStrategy(ConfigurableEnvironment environment)
     {
-        String type = isMultiRegionEnabled(environment) ? MULTI_REGION_STRATEGY : DEFAULT_STRATEGY;
+        StrategyType type = isMultiRegionEnabled(environment) ? StrategyType.MULTI_REGION : StrategyType.DEFAULT;
         return postProcessStrategyFactory.getStrategy(type);
     }
 
@@ -42,7 +39,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
         return environment.getProperty(ParameterStorePropertySourceConfigurationProperty.ENABLED,
                                        Boolean.class,
                                        Boolean.FALSE)
-                || environment.acceptsProfiles(ParameterStorePropertySourceConfigurationProperty.ACCEPTED_PROFILE)
+                || environment.acceptsProfiles(ParameterStorePropertySourceConfigurationProperty.ENABLED_PROFILE)
                 || (!ObjectUtils.isEmpty(userDefinedEnabledProfiles)
                         && environment.acceptsProfiles(userDefinedEnabledProfiles));
     }
@@ -56,6 +53,6 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
 
     private boolean isMultiRegionEnabled(ConfigurableEnvironment environment)
     {
-        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_SIGNING_REGIONS);
+        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperty.MULTI_REGION_SSM_CLIENT_REGIONS);
     }
 }

@@ -1,7 +1,5 @@
 package com.coveo.configuration.parameterstore.strategy;
 
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.HALT_BOOT;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_ENDPOINT_CONFIG_SIGNING_REGION;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,11 +33,11 @@ public class DefaultParameterStorePropertySourceEnvironmentPostProcessStrategyTe
     public void setUp()
     {
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
-        when(configurableEnvironmentMock.getProperty(HALT_BOOT,
+        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperty.HALT_BOOT,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
         when(awsRegionProviderChain.getRegion()).thenReturn("aRegion");
-        when(configurableEnvironmentMock.getProperty(SSM_CLIENT_ENDPOINT_CONFIG_SIGNING_REGION,
+        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_SIGNING_REGION,
                                                      awsRegionProviderChain.getRegion())).thenReturn("aRegion");
 
         postProcessStrategy = new DefaultParameterStorePropertySourceEnvironmentPostProcessStrategy(awsRegionProviderChain);
@@ -56,8 +54,8 @@ public class DefaultParameterStorePropertySourceEnvironmentPostProcessStrategyTe
     @Test
     public void testWhenCustomEndpointShouldAddPropertySource()
     {
-        when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_ENDPOINT_CONFIG_ENDPOINT)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_ENDPOINT_CONFIG_ENDPOINT)).thenReturn("customEndpoint");
+        when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn(Boolean.TRUE);
+        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn("customEndpoint");
 
         postProcessStrategy.postProcess(configurableEnvironmentMock);
 

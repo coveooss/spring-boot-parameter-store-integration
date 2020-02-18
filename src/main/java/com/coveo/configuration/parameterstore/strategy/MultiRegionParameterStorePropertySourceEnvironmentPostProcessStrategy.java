@@ -1,19 +1,16 @@
 package com.coveo.configuration.parameterstore.strategy;
 
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.HALT_BOOT;
-import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_SIGNING_REGIONS;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.ListIterator;
+import java.util.Collections;
+import java.util.List;
 
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.util.ObjectUtils;
+import org.springframework.util.CollectionUtils;
 
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
+import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty;
 import com.coveo.configuration.parameterstore.ParameterStoreSource;
 
 public class MultiRegionParameterStorePropertySourceEnvironmentPostProcessStrategy
@@ -24,28 +21,26 @@ public class MultiRegionParameterStorePropertySourceEnvironmentPostProcessStrate
     @Override
     public void postProcess(ConfigurableEnvironment environment)
     {
-        boolean haltBoot = environment.getProperty(HALT_BOOT, Boolean.class, Boolean.FALSE);
+        boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperty.HALT_BOOT,
+                                                   Boolean.class,
+                                                   Boolean.FALSE);
 
-        LinkedList<String> signingRegions = getSigningRegions(environment);
-        ListIterator<String> regionsIterator = signingRegions.listIterator(signingRegions.size());
+        List<String> regions = getRegions(environment);
+        Collections.reverse(regions);
 
-        // To keep the order of precedence, we iterate from the last one to the first one because of the method 'addFirst'.
-        // If we want the first region specified to be the first property source, we have to add it last.
-        while (regionsIterator.hasPrevious()) {
-            // We only want to halt boot (if true) for the last property source so the first one added.
-            boolean shouldHaltBoot = haltBoot && !regionsIterator.hasNext();
-            String region = regionsIterator.previous();
+        String lastRegion = regions.get(0);
+        environment.getPropertySources().addFirst(buildParameterStorePropertySource(lastRegion, haltBoot));
 
-            environment.getPropertySources()
-                       .addFirst(buildParameterStorePropertySource(PARAMETER_STORE_PROPERTY_SOURCE_NAME + region,
-                                                                   region,
-                                                                   shouldHaltBoot));
-        }
+        regions.stream()
+               .skip(1)
+               .forEach(region -> environment.getPropertySources()
+                                             .addFirst(buildParameterStorePropertySource(region, false)));
     }
 
-    private ParameterStorePropertySource buildParameterStorePropertySource(String name, String region, boolean haltBoot)
+    private ParameterStorePropertySource buildParameterStorePropertySource(String region, boolean haltBoot)
     {
-        return new ParameterStorePropertySource(name, new ParameterStoreSource(buildSSMClient(region), haltBoot));
+        return new ParameterStorePropertySource(PARAMETER_STORE_PROPERTY_SOURCE_NAME + region,
+                                                new ParameterStoreSource(buildSSMClient(region), haltBoot));
     }
 
     private AWSSimpleSystemsManagement buildSSMClient(String region)
@@ -53,10 +48,16 @@ public class MultiRegionParameterStorePropertySourceEnvironmentPostProcessStrate
         return AWSSimpleSystemsManagementClientBuilder.standard().withRegion(region).build();
     }
 
-    private LinkedList<String> getSigningRegions(ConfigurableEnvironment environment)
+    private List<String> getRegions(ConfigurableEnvironment environment)
     {
-        String[] signingRegions = environment.getProperty(SSM_CLIENT_SIGNING_REGIONS, String[].class);
-        return ObjectUtils.isEmpty(signingRegions) ? new LinkedList<>()
-                                                   : new LinkedList<>(Arrays.asList(signingRegions));
+        List<String> regions = CollectionUtils.arrayToList(environment.getProperty(ParameterStorePropertySourceConfigurationProperty.MULTI_REGION_SSM_CLIENT_REGIONS,
+                                                                                   String[].class));
+
+        if (CollectionUtils.isEmpty(regions)) {
+            throw new IllegalArgumentException(String.format("To enable multi region support, the property '%s' must not be empty.",
+                                                             ParameterStorePropertySourceConfigurationProperty.MULTI_REGION_SSM_CLIENT_REGIONS));
+        }
+
+        return regions;
     }
 }

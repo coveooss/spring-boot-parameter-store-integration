@@ -1,6 +1,22 @@
 package com.coveo.configuration.parameterstore.strategy;
 
-public interface ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory
+import java.util.EnumMap;
+
+import com.amazonaws.regions.DefaultAwsRegionProviderChain;
+
+public class ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory
 {
-    ParameterStorePropertySourceEnvironmentPostProcessStrategy getStrategy(String type);
+    private static EnumMap<StrategyType, ParameterStorePropertySourceEnvironmentPostProcessStrategy> strategies = new EnumMap<>(StrategyType.class);
+
+    static {
+        strategies.put(StrategyType.DEFAULT,
+                       new DefaultParameterStorePropertySourceEnvironmentPostProcessStrategy(new DefaultAwsRegionProviderChain()));
+        strategies.put(StrategyType.MULTI_REGION,
+                       new MultiRegionParameterStorePropertySourceEnvironmentPostProcessStrategy());
+    }
+
+    public ParameterStorePropertySourceEnvironmentPostProcessStrategy getStrategy(StrategyType strategyType)
+    {
+        return strategies.get(strategyType);
+    }
 }
