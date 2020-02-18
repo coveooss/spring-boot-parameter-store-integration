@@ -1,5 +1,8 @@
 package com.coveo.configuration.parameterstore;
 
+import static com.amazonaws.SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR;
+import static com.amazonaws.SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY;
+import static com.amazonaws.SDKGlobalConfiguration.SECRET_KEY_ENV_VAR;
 import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.ACCEPTED_PROFILE;
 import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.ACCEPTED_PROFILES;
 import static com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty.ENABLED;
@@ -54,6 +57,10 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         when(configurableEnvironmentMock.getProperty(SUPPORT_MULTIPLE_APPLICATION_CONTEXTS,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
+
+        System.setProperty(ACCESS_KEY_ENV_VAR, "id");
+        System.setProperty(SECRET_KEY_ENV_VAR, "secret");
+        System.setProperty(AWS_REGION_SYSTEM_PROPERTY, "region");
     }
 
     @Test
@@ -76,6 +83,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verify(defaultPostProcessStrategyMock).postProcess(configurableEnvironmentMock);
+        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
     }
 
     @Test
@@ -87,6 +95,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verify(defaultPostProcessStrategyMock).postProcess(configurableEnvironmentMock);
+        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
     }
 
     @Test
@@ -99,6 +108,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verify(defaultPostProcessStrategyMock).postProcess(configurableEnvironmentMock);
+        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
     }
 
     @Test
@@ -112,6 +122,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
 
         verify(configurableEnvironmentMock, never()).acceptsProfiles(EMPTY_CUSTOM_PROFILES);
         verifyZeroInteractions(defaultPostProcessStrategyMock);
+        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
     }
 
     @Test
@@ -124,6 +135,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verifyZeroInteractions(defaultPostProcessStrategyMock);
+        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
     }
 
     @Test
@@ -138,6 +150,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verify(defaultPostProcessStrategyMock).postProcess(configurableEnvironmentMock);
+        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
     }
 
     @Test
@@ -155,6 +168,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verify(defaultPostProcessStrategyMock, times(2)).postProcess(configurableEnvironmentMock);
+        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
     }
 
     @Test
@@ -167,5 +181,6 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verify(multiRegionPostProcessStrategyMock, times(1)).postProcess(configurableEnvironmentMock);
+        verifyZeroInteractions(defaultPostProcessStrategyMock);
     }
 }
