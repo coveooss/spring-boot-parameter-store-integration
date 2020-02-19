@@ -15,10 +15,10 @@ import org.springframework.core.env.MutablePropertySources;
 import com.amazonaws.regions.AwsRegionProviderChain;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
-import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty;
+import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DefaultParameterStorePropertySourceEnvironmentPostProcessStrategyTest
+public class DefaultParameterStorePropertySourceConfigurationStrategyTest
 {
     @Mock
     private ConfigurableEnvironment configurableEnvironmentMock;
@@ -27,26 +27,26 @@ public class DefaultParameterStorePropertySourceEnvironmentPostProcessStrategyTe
     @Mock
     private AwsRegionProviderChain awsRegionProviderChain;
 
-    private DefaultParameterStorePropertySourceEnvironmentPostProcessStrategy postProcessStrategy;
+    private DefaultParameterStorePropertySourceConfigurationStrategy postProcessStrategy;
 
     @Before
     public void setUp()
     {
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperty.HALT_BOOT,
+        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
         when(awsRegionProviderChain.getRegion()).thenReturn("aRegion");
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_SIGNING_REGION,
+        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION,
                                                      awsRegionProviderChain.getRegion())).thenReturn("aRegion");
 
-        postProcessStrategy = new DefaultParameterStorePropertySourceEnvironmentPostProcessStrategy(awsRegionProviderChain);
+        postProcessStrategy = new DefaultParameterStorePropertySourceConfigurationStrategy(awsRegionProviderChain);
     }
 
     @Test
     public void testShouldAddPropertySource()
     {
-        postProcessStrategy.postProcess(configurableEnvironmentMock);
+        postProcessStrategy.configureParameterStorePropertySources(configurableEnvironmentMock);
 
         verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
     }
@@ -54,10 +54,10 @@ public class DefaultParameterStorePropertySourceEnvironmentPostProcessStrategyTe
     @Test
     public void testWhenCustomEndpointShouldAddPropertySource()
     {
-        when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn("customEndpoint");
+        when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn(Boolean.TRUE);
+        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn("customEndpoint");
 
-        postProcessStrategy.postProcess(configurableEnvironmentMock);
+        postProcessStrategy.configureParameterStorePropertySources(configurableEnvironmentMock);
 
         verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
     }

@@ -85,7 +85,8 @@ If you still want the post processor to run twice or if you are using [spring-bo
 - Set `awsParameterStoreSource.multiRegion.ssmClient.regions` with the regions from which you need to retrieve parameters using a **comma-separated** list such as `us-east-1,us-east-2`. It adds a PropertySource for each region specified. It will start looking from the first region and so on until it finds the property so put the regions in order of precedence.  
 **Reminder**: using other list injecting methods like a yaml list won't work because this property gets loaded too early in the boot process.
 - If you want to halt the boot when a property isn't found in any of the specified regions, just set `awsParameterStorePropertySource.haltBoot` to `true` in your properties.
-- Make sure that your service has the necessary permissions to access parameters in the specified regions.
+- Make sure that your service has the necessary permissions to access parameters in the specified regions.  
+**Important**: If set, it takes precedence over `awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint` and `awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion`. They are mutually exclusive.  
 
 ## Contributing
 Open an issue to report bugs or to request additional features. Pull requests are always welcome.

@@ -8,25 +8,25 @@ import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
-import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperty;
+import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
 import com.coveo.configuration.parameterstore.ParameterStoreSource;
 
-public class DefaultParameterStorePropertySourceEnvironmentPostProcessStrategy
-        implements ParameterStorePropertySourceEnvironmentPostProcessStrategy
+public class DefaultParameterStorePropertySourceConfigurationStrategy
+        implements ParameterStorePropertySourceConfigurationStrategy
 {
     private static final String PARAMETER_STORE_PROPERTY_SOURCE_NAME = "AWSParameterStorePropertySource";
 
     private AwsRegionProviderChain awsRegionProviderChain;
 
-    public DefaultParameterStorePropertySourceEnvironmentPostProcessStrategy(AwsRegionProviderChain awsRegionProviderChain)
+    public DefaultParameterStorePropertySourceConfigurationStrategy(AwsRegionProviderChain awsRegionProviderChain)
     {
         this.awsRegionProviderChain = awsRegionProviderChain;
     }
 
     @Override
-    public void postProcess(ConfigurableEnvironment environment)
+    public void configureParameterStorePropertySources(ConfigurableEnvironment environment)
     {
-        boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperty.HALT_BOOT,
+        boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                    Boolean.class,
                                                    Boolean.FALSE);
         environment.getPropertySources()
@@ -53,17 +53,17 @@ public class DefaultParameterStorePropertySourceEnvironmentPostProcessStrategy
 
     private boolean hasCustomEndpoint(ConfigurableEnvironment environment)
     {
-        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_CUSTOM_ENDPOINT);
+        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT);
     }
 
     private String getCustomEndpoint(ConfigurableEnvironment environment)
     {
-        return environment.getProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_CUSTOM_ENDPOINT);
+        return environment.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT);
     }
 
     private String getSigningRegion(ConfigurableEnvironment environment)
     {
-        return environment.getProperty(ParameterStorePropertySourceConfigurationProperty.SSM_CLIENT_SIGNING_REGION,
+        return environment.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION,
                                        awsRegionProviderChain.getRegion());
     }
 }

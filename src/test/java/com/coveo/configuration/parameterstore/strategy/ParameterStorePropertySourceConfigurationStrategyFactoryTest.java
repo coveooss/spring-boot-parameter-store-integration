@@ -10,14 +10,14 @@ import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ParameterStorePropertySourceEnvironmentPostProcessStrategyFactoryTest
+public class ParameterStorePropertySourceConfigurationStrategyFactoryTest
 {
-    private ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory factory;
+    private ParameterStorePropertySourceConfigurationStrategyFactory factory;
 
     @Before
     public void setUp()
     {
-        factory = new ParameterStorePropertySourceEnvironmentPostProcessStrategyFactory();
+        factory = new ParameterStorePropertySourceConfigurationStrategyFactory();
 
         System.setProperty(ACCESS_KEY_ENV_VAR, "id");
         System.setProperty(SECRET_KEY_ENV_VAR, "secret");
@@ -28,13 +28,13 @@ public class ParameterStorePropertySourceEnvironmentPostProcessStrategyFactoryTe
     public void testGettingDefaultStrategy()
     {
         assertThat(factory.getStrategy(StrategyType.DEFAULT),
-                   is(instanceOf(DefaultParameterStorePropertySourceEnvironmentPostProcessStrategy.class)));
+                   is(instanceOf(DefaultParameterStorePropertySourceConfigurationStrategy.class)));
     }
 
     @Test
     public void testGettingMultiRegionStrategy()
     {
         assertThat(factory.getStrategy(StrategyType.MULTI_REGION),
-                   is(instanceOf(MultiRegionParameterStorePropertySourceEnvironmentPostProcessStrategy.class)));
+                   is(instanceOf(MultiRegionParameterStorePropertySourceConfigurationStrategy.class)));
     }
 }
