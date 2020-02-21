@@ -12,13 +12,13 @@ import com.coveo.configuration.parameterstore.strategy.StrategyType;
 public class ParameterStorePropertySourceEnvironmentPostProcessor implements EnvironmentPostProcessor
 {
     static boolean initialized;
-    protected static ParameterStorePropertySourceConfigurationStrategyFactory postProcessStrategyFactory = new ParameterStorePropertySourceConfigurationStrategyFactory();
+    static ParameterStorePropertySourceConfigurationStrategyFactory strategyFactory = new ParameterStorePropertySourceConfigurationStrategyFactory();
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application)
     {
         if (!initialized && isParameterStorePropertySourceEnabled(environment)) {
-            getPostProcessStrategy(environment).configureParameterStorePropertySources(environment);
+            getParameterStorePropertySourceConfigurationStrategy(environment).configureParameterStorePropertySources(environment);
 
             if (doesNotSupportMultipleApplicationContexts(environment)) {
                 initialized = true;
@@ -26,10 +26,10 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
         }
     }
 
-    private ParameterStorePropertySourceConfigurationStrategy getPostProcessStrategy(ConfigurableEnvironment environment)
+    private ParameterStorePropertySourceConfigurationStrategy getParameterStorePropertySourceConfigurationStrategy(ConfigurableEnvironment environment)
     {
         StrategyType type = isMultiRegionEnabled(environment) ? StrategyType.MULTI_REGION : StrategyType.DEFAULT;
-        return postProcessStrategyFactory.getStrategy(type);
+        return strategyFactory.getStrategy(type);
     }
 
     private boolean isParameterStorePropertySourceEnabled(ConfigurableEnvironment environment)

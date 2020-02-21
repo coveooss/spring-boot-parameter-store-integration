@@ -28,6 +28,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
 {
     private static final String[] SIGNING_REGIONS = { "ownRegion", "mainRegion", "defaultRegion" };
     private static final String[] SINGLE_SIGNING_REGIONS = { "ownRegion" };
+    private static final String[] EMPTY_REGIONS = {};
 
     @Mock
     private ConfigurableEnvironment configurableEnvironmentMock;
@@ -37,7 +38,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     @Captor
     private ArgumentCaptor<ParameterStorePropertySource> parameterStorePropertySourceArgumentCaptor;
 
-    private MultiRegionParameterStorePropertySourceConfigurationStrategy postProcessStrategy;
+    private MultiRegionParameterStorePropertySourceConfigurationStrategy strategy;
 
     @Before
     public void setUp()
@@ -49,18 +50,17 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                                                      String[].class)).thenReturn(SIGNING_REGIONS);
 
-        postProcessStrategy = new MultiRegionParameterStorePropertySourceConfigurationStrategy();
+        strategy = new MultiRegionParameterStorePropertySourceConfigurationStrategy();
     }
 
     @Test
     public void testShouldAddPropertySourceForEverySigningRegionsInOrderOfPrecedence()
     {
-        postProcessStrategy.configureParameterStorePropertySources(configurableEnvironmentMock);
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock);
 
         verify(mutablePropertySourcesMock, times(3)).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
 
         List<ParameterStorePropertySource> propertySources = parameterStorePropertySourceArgumentCaptor.getAllValues();
-
         verifyParameterStorePropertySource(propertySources.get(0), SIGNING_REGIONS[0], Boolean.FALSE);
         verifyParameterStorePropertySource(propertySources.get(1), SIGNING_REGIONS[1], Boolean.FALSE);
         verifyParameterStorePropertySource(propertySources.get(2), SIGNING_REGIONS[2], Boolean.FALSE);
@@ -73,12 +73,11 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.TRUE);
 
-        postProcessStrategy.configureParameterStorePropertySources(configurableEnvironmentMock);
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock);
 
         verify(mutablePropertySourcesMock, times(3)).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
 
         List<ParameterStorePropertySource> propertySources = parameterStorePropertySourceArgumentCaptor.getAllValues();
-
         verifyParameterStorePropertySource(propertySources.get(0), SIGNING_REGIONS[0], Boolean.TRUE);
         verifyParameterStorePropertySource(propertySources.get(1), SIGNING_REGIONS[1], Boolean.FALSE);
         verifyParameterStorePropertySource(propertySources.get(2), SIGNING_REGIONS[2], Boolean.FALSE);
@@ -93,12 +92,21 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                                                      String[].class)).thenReturn(SINGLE_SIGNING_REGIONS);
 
-        postProcessStrategy.configureParameterStorePropertySources(configurableEnvironmentMock);
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock);
 
         verify(mutablePropertySourcesMock).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
         verifyParameterStorePropertySource(parameterStorePropertySourceArgumentCaptor.getValue(),
                                            SINGLE_SIGNING_REGIONS[0],
                                            Boolean.TRUE);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testShouldThrowWhenRegionsIsEmpty()
+    {
+        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
+                                                     String[].class)).thenReturn(EMPTY_REGIONS);
+
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock);
     }
 
     private void verifyParameterStorePropertySource(ParameterStorePropertySource actual,

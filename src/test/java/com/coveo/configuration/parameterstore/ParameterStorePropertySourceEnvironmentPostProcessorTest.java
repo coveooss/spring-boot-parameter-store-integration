@@ -32,7 +32,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Mock
     private SpringApplication applicationMock;
     @Mock
-    private ParameterStorePropertySourceConfigurationStrategyFactory postProcessStrategyFactoryMock;
+    private ParameterStorePropertySourceConfigurationStrategyFactory strategyFactoryMock;
     @Mock
     private ParameterStorePropertySourceConfigurationStrategy defaultPostProcessStrategyMock;
     @Mock
@@ -45,9 +45,9 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     {
         ParameterStorePropertySourceEnvironmentPostProcessor.initialized = false;
 
-        when(postProcessStrategyFactoryMock.getStrategy(StrategyType.DEFAULT)).thenReturn(defaultPostProcessStrategyMock);
-        when(postProcessStrategyFactoryMock.getStrategy(StrategyType.MULTI_REGION)).thenReturn(multiRegionPostProcessStrategyMock);
-        ParameterStorePropertySourceEnvironmentPostProcessor.postProcessStrategyFactory = postProcessStrategyFactoryMock;
+        when(strategyFactoryMock.getStrategy(StrategyType.DEFAULT)).thenReturn(defaultPostProcessStrategyMock);
+        when(strategyFactoryMock.getStrategy(StrategyType.MULTI_REGION)).thenReturn(multiRegionPostProcessStrategyMock);
+        ParameterStorePropertySourceEnvironmentPostProcessor.strategyFactory = strategyFactoryMock;
 
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
                                                      Boolean.class,

@@ -27,7 +27,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     @Mock
     private AwsRegionProviderChain awsRegionProviderChain;
 
-    private DefaultParameterStorePropertySourceConfigurationStrategy postProcessStrategy;
+    private DefaultParameterStorePropertySourceConfigurationStrategy strategy;
 
     @Before
     public void setUp()
@@ -40,13 +40,13 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION,
                                                      awsRegionProviderChain.getRegion())).thenReturn("aRegion");
 
-        postProcessStrategy = new DefaultParameterStorePropertySourceConfigurationStrategy(awsRegionProviderChain);
+        strategy = new DefaultParameterStorePropertySourceConfigurationStrategy(awsRegionProviderChain);
     }
 
     @Test
     public void testShouldAddPropertySource()
     {
-        postProcessStrategy.configureParameterStorePropertySources(configurableEnvironmentMock);
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock);
 
         verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
     }
@@ -57,7 +57,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
         when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn(Boolean.TRUE);
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn("customEndpoint");
 
-        postProcessStrategy.configureParameterStorePropertySources(configurableEnvironmentMock);
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock);
 
         verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
     }
