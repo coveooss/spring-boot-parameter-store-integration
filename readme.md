@@ -12,7 +12,7 @@ The library uses:
 - [Spring Boot](https://spring.io/projects/spring-boot) 1.5.21.RELEASE
 - [AWS Java SDK](https://aws.amazon.com/sdk-for-java/) 1.11.566
 
-Those can be overriden in your `pom.xml`.  
+Those can be overridden in your `pom.xml`.  
 
 The library was tested and worked properly with:
 
@@ -26,7 +26,7 @@ The library was tested and worked properly with:
 <dependency>
     <groupId>com.coveo</groupId>
     <artifactId>spring-boot-parameter-store-integration</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
@@ -82,11 +82,11 @@ Spring Cloud has a second application context named bootstrap that gets initiali
 If you still want the post processor to run twice or if you are using [spring-boot-devtools](https://docs.spring.io/spring-boot/docs/current/reference/html/using-spring-boot.html#using-boot-devtools-restart), you can set the optional property `awsParameterStorePropertySource.supportMultipleApplicationContexts` to `true`. The default property value is `false`to prevent multiple initializations. If you are also using Spring Cloud, this property will only work if set in the bootstrap properties.
 
 ## Multi-region support
-- Set `awsParameterStoreSource.multiRegion.ssmClient.regions` with the regions from which you need to retrieve parameters using a **comma-separated** list such as `us-east-1,us-east-2`. It adds a `ParameterStorePropertySource` to the property sources for each region specified. It will start looking from the first region and so on until it finds the property so put the regions in order of precedence.  
+- Set `awsParameterStoreSource.multiRegion.ssmClient.regions` to a comma-separated string of regions from which you want to retrieve parameters. Example: `us-east-1,us-east-2`. Doing so will add a `ParameterStorePropertySource` object for each region specified, and this object will list the parameters associated with this region. The integration searches for parameters in regions following the order specified, and stops at the first occurrence. You should therefore put the regions **in order of precedence**.  
 **Reminder**: using other list injecting methods like a yaml list won't work because this property gets loaded too early in the boot process.
 - If you want to halt the boot when a property isn't found in any of the specified regions, just set `awsParameterStorePropertySource.haltBoot` to `true` in your properties.
 - Make sure that your service has the necessary permissions to access parameters in the specified regions.  
-**Important**: If set, it takes precedence over `awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint` and `awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion`. They are mutually exclusive.  
+**Important**: If set, this property takes precedence over `awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint` and `awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion`. They are mutually exclusive.  
 
 ## Contributing
 Open an issue to report bugs or to request additional features. Pull requests are always welcome.
