@@ -12,7 +12,7 @@ The library uses:
 - [Spring Boot](https://spring.io/projects/spring-boot) 1.5.21.RELEASE
 - [AWS Java SDK](https://aws.amazon.com/sdk-for-java/) 1.11.566
 
-Those can be overriden in your `pom.xml`.  
+Those can be overridden in your `pom.xml`.  
 
 The library was tested and worked properly with:
 
@@ -26,7 +26,7 @@ The library was tested and worked properly with:
 <dependency>
     <groupId>com.coveo</groupId>
     <artifactId>spring-boot-parameter-store-integration</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
