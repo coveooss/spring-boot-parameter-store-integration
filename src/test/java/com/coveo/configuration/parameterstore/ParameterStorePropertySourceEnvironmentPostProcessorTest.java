@@ -43,16 +43,11 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Before
     public void setUp()
     {
-        ParameterStorePropertySourceEnvironmentPostProcessor.initialized = false;
-
         when(strategyFactoryMock.getStrategy(StrategyType.DEFAULT)).thenReturn(defaultPostProcessStrategyMock);
         when(strategyFactoryMock.getStrategy(StrategyType.MULTI_REGION)).thenReturn(multiRegionPostProcessStrategyMock);
         ParameterStorePropertySourceEnvironmentPostProcessor.strategyFactory = strategyFactoryMock;
 
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SUPPORT_MULTIPLE_APPLICATION_CONTEXTS,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
 
@@ -137,44 +132,6 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verifyZeroInteractions(defaultPostProcessStrategyMock);
-        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
-    }
-
-    @Test
-    public void testParameterStorePropertySourceEnvironmentPostProcessorCantBeCalledTwice()
-    {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-
-        parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
-                                                                                    applicationMock);
-
-        parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
-                                                                                    applicationMock);
-
-        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(configurableEnvironmentMock);
-        verifyZeroInteractions(multiRegionPostProcessStrategyMock);
-    }
-
-    @Test
-    public void testParameterStorePropertySourceEnvironmentPostProcessorCanBeCalledTwiceWhenDisablingMultipleContextSupport()
-    {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SUPPORT_MULTIPLE_APPLICATION_CONTEXTS,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-
-        parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
-                                                                                    applicationMock);
-
-        parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
-                                                                                    applicationMock);
-
-        verify(defaultPostProcessStrategyMock,
-               times(2)).configureParameterStorePropertySources(configurableEnvironmentMock);
         verifyZeroInteractions(multiRegionPostProcessStrategyMock);
     }
 

@@ -13,8 +13,6 @@ public final class ParameterStorePropertySourceConfigurationProperties
     public static final String ENABLED = joinWithDot(PROPERTY_SOURCE_PREFIX, "enabled");
     public static final String ACCEPTED_PROFILES = joinWithDot(PROPERTY_SOURCE_PREFIX, "enabledProfiles");
     public static final String HALT_BOOT = joinWithDot(PROPERTY_SOURCE_PREFIX, "haltBoot");
-    public static final String SUPPORT_MULTIPLE_APPLICATION_CONTEXTS = joinWithDot(PROPERTY_SOURCE_PREFIX,
-                                                                                   "supportMultipleApplicationContexts");
 
     public static final String SSM_CLIENT_CUSTOM_ENDPOINT = joinWithDot(SSM_CLIENT_ENDPOINT_CONFIG_PREFIX, "endpoint");
     public static final String SSM_CLIENT_SIGNING_REGION = joinWithDot(SSM_CLIENT_ENDPOINT_CONFIG_PREFIX,
