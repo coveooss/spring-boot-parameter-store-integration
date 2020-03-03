@@ -2,6 +2,7 @@ package com.coveo.configuration.parameterstore;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.ObjectUtils;
 
@@ -9,20 +10,15 @@ import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySou
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategyFactory;
 import com.coveo.configuration.parameterstore.strategy.StrategyType;
 
-public class ParameterStorePropertySourceEnvironmentPostProcessor implements EnvironmentPostProcessor
+public class ParameterStorePropertySourceEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered
 {
-    static boolean initialized;
     static ParameterStorePropertySourceConfigurationStrategyFactory strategyFactory = new ParameterStorePropertySourceConfigurationStrategyFactory();
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application)
     {
-        if (!initialized && isParameterStorePropertySourceEnabled(environment)) {
+        if (isParameterStorePropertySourceEnabled(environment)) {
             getParameterStorePropertySourceConfigurationStrategy(environment).configureParameterStorePropertySources(environment);
-
-            if (doesNotSupportMultipleApplicationContexts(environment)) {
-                initialized = true;
-            }
         }
     }
 
@@ -44,15 +40,14 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
                         && environment.acceptsProfiles(userDefinedEnabledProfiles));
     }
 
-    private boolean doesNotSupportMultipleApplicationContexts(ConfigurableEnvironment environment)
-    {
-        return !environment.getProperty(ParameterStorePropertySourceConfigurationProperties.SUPPORT_MULTIPLE_APPLICATION_CONTEXTS,
-                                        Boolean.class,
-                                        Boolean.FALSE);
-    }
-
     private boolean isMultiRegionEnabled(ConfigurableEnvironment environment)
     {
         return environment.containsProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS);
+    }
+
+    @Override
+    public int getOrder()
+    {
+        return Ordered.LOWEST_PRECEDENCE;
     }
 }

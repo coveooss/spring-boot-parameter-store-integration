@@ -11,8 +11,7 @@ public class ParameterStorePropertySourceConfigurationStrategyFactory
     static {
         strategies.put(StrategyType.DEFAULT,
                        new DefaultParameterStorePropertySourceConfigurationStrategy(new DefaultAwsRegionProviderChain()));
-        strategies.put(StrategyType.MULTI_REGION,
-                       new MultiRegionParameterStorePropertySourceConfigurationStrategy());
+        strategies.put(StrategyType.MULTI_REGION, new MultiRegionParameterStorePropertySourceConfigurationStrategy());
     }
 
     public ParameterStorePropertySourceConfigurationStrategy getStrategy(StrategyType strategyType)
