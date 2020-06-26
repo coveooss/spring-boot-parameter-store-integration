@@ -9,8 +9,8 @@ The Spring Boot Parameter Store Integration is a tiny library used to integrate 
 ## Requirements
 The library uses:
 
-- [Spring Boot](https://spring.io/projects/spring-boot) 1.5.21.RELEASE
-- [AWS Java SDK](https://aws.amazon.com/sdk-for-java/) 1.11.566
+- [Spring Boot](https://spring.io/projects/spring-boot) 1.5.22.RELEASE
+- [AWS Java SDK](https://aws.amazon.com/sdk-for-java/) 1.11.795
 
 Those can be overridden in your `pom.xml`.  
 
