@@ -13,7 +13,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;
 
 import com.amazonaws.regions.AwsRegionProviderChain;
-
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
 
@@ -46,7 +46,8 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     @Test
     public void testShouldAddPropertySource()
     {
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock);
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
+                                                        AWSSimpleSystemsManagementClientBuilder.standard());
 
         verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
     }
@@ -57,7 +58,8 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
         when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn(Boolean.TRUE);
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn("customEndpoint");
 
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock);
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
+                                                        AWSSimpleSystemsManagementClientBuilder.standard());
 
         verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
     }

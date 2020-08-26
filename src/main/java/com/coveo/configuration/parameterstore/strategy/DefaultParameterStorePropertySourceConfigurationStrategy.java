@@ -6,7 +6,6 @@ import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.regions.AwsRegionProviderChain;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
-
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
 import com.coveo.configuration.parameterstore.ParameterStoreSource;
@@ -24,13 +23,15 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
     }
 
     @Override
-    public void configureParameterStorePropertySources(ConfigurableEnvironment environment)
+    public void configureParameterStorePropertySources(ConfigurableEnvironment environment,
+                                                       AWSSimpleSystemsManagementClientBuilder ssmClientBuilder)
     {
         boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                    Boolean.class,
                                                    Boolean.FALSE);
         environment.getPropertySources()
-                   .addFirst(buildParameterStorePropertySource(buildSSMClient(environment), haltBoot));
+                   .addFirst(buildParameterStorePropertySource(buildSSMClient(environment, ssmClientBuilder),
+                                                               haltBoot));
     }
 
     private ParameterStorePropertySource buildParameterStorePropertySource(AWSSimpleSystemsManagement ssmClient,
@@ -40,15 +41,15 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
                                                 new ParameterStoreSource(ssmClient, haltBoot));
     }
 
-    private AWSSimpleSystemsManagement buildSSMClient(ConfigurableEnvironment environment)
+    private AWSSimpleSystemsManagement buildSSMClient(ConfigurableEnvironment environment,
+                                                      AWSSimpleSystemsManagementClientBuilder ssmClientBuilder)
     {
         if (hasCustomEndpoint(environment)) {
-            return AWSSimpleSystemsManagementClientBuilder.standard()
-                                                          .withEndpointConfiguration(new EndpointConfiguration(getCustomEndpoint(environment),
-                                                                                                               getSigningRegion(environment)))
-                                                          .build();
+            return ssmClientBuilder.withEndpointConfiguration(new EndpointConfiguration(getCustomEndpoint(environment),
+                                                                                        getSigningRegion(environment)))
+                                   .build();
         }
-        return AWSSimpleSystemsManagementClientBuilder.defaultClient();
+        return ssmClientBuilder.build();
     }
 
     private boolean hasCustomEndpoint(ConfigurableEnvironment environment)
