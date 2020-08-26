@@ -6,6 +6,9 @@ import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.ObjectUtils;
 
+import com.amazonaws.ClientConfigurationFactory;
+import com.amazonaws.retry.PredefinedRetryPolicies;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategy;
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategyFactory;
 import com.coveo.configuration.parameterstore.strategy.StrategyType;
@@ -18,8 +21,18 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application)
     {
         if (isParameterStorePropertySourceEnabled(environment)) {
-            getParameterStorePropertySourceConfigurationStrategy(environment).configureParameterStorePropertySources(environment);
+            getParameterStorePropertySourceConfigurationStrategy(environment).configureParameterStorePropertySources(environment,
+                                                                                                                     preconfigureSSMClientBuilder(environment));
         }
+    }
+
+    private AWSSimpleSystemsManagementClientBuilder preconfigureSSMClientBuilder(ConfigurableEnvironment environment)
+    {
+        return AWSSimpleSystemsManagementClientBuilder.standard()
+                                                      .withClientConfiguration(new ClientConfigurationFactory().getConfig()
+                                                                                                               .withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(environment.getProperty(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY,
+                                                                                                                                                                                                                          Integer.class,
+                                                                                                                                                                                                                          PredefinedRetryPolicies.DEFAULT_MAX_ERROR_RETRY))));
     }
 
     private ParameterStorePropertySourceConfigurationStrategy getParameterStorePropertySourceConfigurationStrategy(ConfigurableEnvironment environment)

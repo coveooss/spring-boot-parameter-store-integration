@@ -26,7 +26,7 @@ The library was tested and worked properly with:
 <dependency>
     <groupId>com.coveo</groupId>
     <artifactId>spring-boot-parameter-store-integration</artifactId>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
 </dependency>
 ```
 
@@ -51,6 +51,8 @@ The AWS Parameter Store already uses this naming pattern to classify your proper
 The lib uses the [DefaultAWSCredentialProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html) and the [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html). This means that if your code is running on an EC2 instance that has access to a Parameter Store property and its associated KMS key, the library should be able to fetch it without any configuration.
 
 If you need to use a custom endpoint for the AWS Simple Systems Management client, you can set the property `awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint`. For more details, see the [AWSClientBuilder.EndpointConfiguration](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/client/builder/AwsClientBuilder.EndpointConfiguration.html) class, which is used to configure the client. By default, the associated signing region is fetched from [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html), but if you need to specify a different one, you can use the property `awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion`. Note that this only sets the `signingRegion` for the endpoint and not the aws client region. Region configuration should be done using the providers available from the [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html).
+
+If you ever hit some AWS exceptions, there is a parameter that can allow the Parameter Store client to retry more than the default 3 times (AWS SDK default). Just use the property `awsParameterStoreSource.ssmClient.maxErrorRetry` to increase the number of retries.
 
 ## Using Spring Boot's Placeholder Properties
 

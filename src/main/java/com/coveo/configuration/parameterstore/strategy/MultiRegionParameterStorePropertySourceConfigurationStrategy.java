@@ -8,7 +8,6 @@ import org.springframework.util.CollectionUtils;
 
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
-
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
 import com.coveo.configuration.parameterstore.ParameterStoreSource;
@@ -19,7 +18,8 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
     private static final String PARAMETER_STORE_PROPERTY_SOURCE_NAME = "MultiRegionAWSParameterStorePropertySource_";
 
     @Override
-    public void configureParameterStorePropertySources(ConfigurableEnvironment environment)
+    public void configureParameterStorePropertySources(ConfigurableEnvironment environment,
+                                                       AWSSimpleSystemsManagementClientBuilder ssmClientBuilder)
     {
         boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                    Boolean.class,
@@ -35,23 +35,29 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
         String lastRegion = regions.get(0);
 
         // We only want to halt boot (if true) for the last region
-        environment.getPropertySources().addFirst(buildParameterStorePropertySource(lastRegion, haltBoot));
+        environment.getPropertySources()
+                   .addFirst(buildParameterStorePropertySource(ssmClientBuilder, lastRegion, haltBoot));
 
         regions.stream()
                .skip(1)
                .forEach(region -> environment.getPropertySources()
-                                             .addFirst(buildParameterStorePropertySource(region, false)));
+                                             .addFirst(buildParameterStorePropertySource(ssmClientBuilder,
+                                                                                         region,
+                                                                                         false)));
     }
 
-    private ParameterStorePropertySource buildParameterStorePropertySource(String region, boolean haltBoot)
+    private ParameterStorePropertySource buildParameterStorePropertySource(AWSSimpleSystemsManagementClientBuilder ssmClientBuilder,
+                                                                           String region,
+                                                                           boolean haltBoot)
     {
-        return new ParameterStorePropertySource(PARAMETER_STORE_PROPERTY_SOURCE_NAME + region,
-                                                new ParameterStoreSource(buildSSMClient(region), haltBoot));
+        return new ParameterStorePropertySource(PARAMETER_STORE_PROPERTY_SOURCE_NAME
+                + region, new ParameterStoreSource(buildSSMClient(ssmClientBuilder, region), haltBoot));
     }
 
-    private AWSSimpleSystemsManagement buildSSMClient(String region)
+    private AWSSimpleSystemsManagement buildSSMClient(AWSSimpleSystemsManagementClientBuilder ssmClientBuilder,
+                                                      String region)
     {
-        return AWSSimpleSystemsManagementClientBuilder.standard().withRegion(region).build();
+        return ssmClientBuilder.withRegion(region).build();
     }
 
     private List<String> getRegions(ConfigurableEnvironment environment)
