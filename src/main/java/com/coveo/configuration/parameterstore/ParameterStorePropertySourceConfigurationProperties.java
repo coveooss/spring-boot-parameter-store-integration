@@ -2,10 +2,11 @@ package com.coveo.configuration.parameterstore;
 
 public final class ParameterStorePropertySourceConfigurationProperties
 {
+    private static final String SSM_CLIENT = "ssmClient";
     private static final String PROPERTY_SOURCE_PREFIX = "awsParameterStorePropertySource";
     private static final String SOURCE_PREFIX = "awsParameterStoreSource";
     private static final String SSM_CLIENT_ENDPOINT_CONFIG_PREFIX = joinWithDot(SOURCE_PREFIX,
-                                                                                "ssmClient",
+                                                                                SSM_CLIENT,
                                                                                 "endpointConfiguration");
 
     public static final String ENABLED_PROFILE = "awsParameterStorePropertySourceEnabled";
@@ -19,8 +20,9 @@ public final class ParameterStorePropertySourceConfigurationProperties
                                                                        "signingRegion");
     public static final String MULTI_REGION_SSM_CLIENT_REGIONS = joinWithDot(SOURCE_PREFIX,
                                                                              "multiRegion",
-                                                                             "ssmClient",
+                                                                             SSM_CLIENT,
                                                                              "regions");
+    public static final String MAX_ERROR_RETRY = joinWithDot(SOURCE_PREFIX, SSM_CLIENT, "maxErrorRetry");
 
     private static String joinWithDot(String... elements)
     {
