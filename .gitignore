@@ -3,3 +3,6 @@ target
 *.classpath
 *.project
 *.xml.versionsBackup
+
+/.idea/*
+/spring-boot-parameter-store-integration.iml

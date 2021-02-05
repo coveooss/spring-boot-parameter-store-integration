@@ -12,10 +12,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;
 
-import com.amazonaws.regions.AwsRegionProviderChain;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.regions.providers.AwsRegionProviderChain;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultParameterStorePropertySourceConfigurationStrategyTest
@@ -36,9 +37,8 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
-        when(awsRegionProviderChain.getRegion()).thenReturn("aRegion");
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION,
-                                                     awsRegionProviderChain.getRegion())).thenReturn("aRegion");
+        when(awsRegionProviderChain.getRegion()).thenReturn(Region.of("aRegion"));
+        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION)).thenReturn("aRegion");
 
         strategy = new DefaultParameterStorePropertySourceConfigurationStrategy(awsRegionProviderChain);
     }
@@ -47,7 +47,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     public void testShouldAddPropertySource()
     {
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+                                                        SsmClient.builder());
 
         verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
     }
@@ -59,7 +59,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn("customEndpoint");
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+                                                        SsmClient.builder());
 
         verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
     }

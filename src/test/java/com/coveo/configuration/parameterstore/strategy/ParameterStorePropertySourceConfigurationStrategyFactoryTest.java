@@ -1,8 +1,5 @@
 package com.coveo.configuration.parameterstore.strategy;
 
-import static com.amazonaws.SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR;
-import static com.amazonaws.SDKGlobalConfiguration.AWS_REGION_SYSTEM_PROPERTY;
-import static com.amazonaws.SDKGlobalConfiguration.SECRET_KEY_ENV_VAR;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -19,9 +16,9 @@ public class ParameterStorePropertySourceConfigurationStrategyFactoryTest
     {
         factory = new ParameterStorePropertySourceConfigurationStrategyFactory();
 
-        System.setProperty(ACCESS_KEY_ENV_VAR, "id");
-        System.setProperty(SECRET_KEY_ENV_VAR, "secret");
-        System.setProperty(AWS_REGION_SYSTEM_PROPERTY, "region");
+        System.setProperty("AWS_ACCESS_KEY_ID", "id");
+        System.setProperty("AWS_SECRET_KEY", "secret");
+        System.setProperty("aws.region", "region");
     }
 
     @Test

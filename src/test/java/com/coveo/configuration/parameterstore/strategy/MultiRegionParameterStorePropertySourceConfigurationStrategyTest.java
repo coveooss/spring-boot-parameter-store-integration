@@ -20,9 +20,9 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
@@ -58,7 +58,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     public void testShouldAddPropertySourceForEverySigningRegionsInOrderOfPrecedence()
     {
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+                SsmClient.builder());
 
         verify(mutablePropertySourcesMock, times(3)).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
 
@@ -76,7 +76,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
                                                      Boolean.FALSE)).thenReturn(Boolean.TRUE);
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+                                                        SsmClient.builder());
 
         verify(mutablePropertySourcesMock, times(3)).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
 
@@ -96,7 +96,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
                                                      String[].class)).thenReturn(SINGLE_SIGNING_REGIONS);
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+                                                        SsmClient.builder());
 
         verify(mutablePropertySourcesMock).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
         verifyParameterStorePropertySource(parameterStorePropertySourceArgumentCaptor.getValue(),
@@ -111,7 +111,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
                                                      String[].class)).thenReturn(EMPTY_REGIONS);
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+                                                        SsmClient.builder());
     }
 
     private void verifyParameterStorePropertySource(ParameterStorePropertySource actual,
