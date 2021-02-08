@@ -5,7 +5,9 @@ import com.coveo.configuration.parameterstore.exception.ParameterStoreParameterN
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.amazon.awssdk.awscore.AwsResponseMetadata;
 import software.amazon.awssdk.http.SdkHttpResponse;
@@ -14,6 +16,10 @@ import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.model.SsmResponse;
+import software.amazon.awssdk.services.ssm.model.SsmResponseMetadata;
+
+import java.util.HashMap;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -29,17 +35,14 @@ public class ParameterStoreSourceTest {
 
     @Mock
     private SsmClient ssmClientMock;
+
     @Mock
     private SdkHttpResponse sdkHttpMetadataMock;
-    @Mock
-    private AwsResponseMetadata responseMetadataMock;
 
     private ParameterStoreSource parameterStoreSource;
 
     @Before
     public void setUp() {
-        when(sdkHttpMetadataMock.statusCode()).thenReturn(200);
-
         parameterStoreSource = new ParameterStoreSource(ssmClientMock, false);
     }
 
@@ -110,8 +113,13 @@ public class ParameterStoreSourceTest {
     private GetParameterResponse.Builder getGetParameterResult() {
         GetParameterResponse.Builder builder = GetParameterResponse
                 .builder();
-        builder.responseMetadata(responseMetadataMock);
-        builder.sdkHttpResponse(sdkHttpMetadataMock);
+        builder.responseMetadata(SsmResponseMetadata.create(new AwsResponseMetadata(new HashMap<>()) {
+            @Override
+            public String requestId() {
+                return super.requestId();
+            }
+        }));
+        builder.sdkHttpResponse(SdkHttpResponse.builder().statusCode(200).build());
         return builder;
 
     }

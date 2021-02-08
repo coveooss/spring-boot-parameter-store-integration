@@ -22,6 +22,8 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 public class DefaultParameterStorePropertySourceConfigurationStrategyTest
 {
     @Mock
+    private SsmClient ssmClientMock;
+    @Mock
     private ConfigurableEnvironment configurableEnvironmentMock;
     @Mock
     private MutablePropertySources mutablePropertySourcesMock;
@@ -56,7 +58,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     public void testWhenCustomEndpointShouldAddPropertySource()
     {
         when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn("customEndpoint");
+        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn("http://customEndpoint");
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
                                                         SsmClient.builder());
