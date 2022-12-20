@@ -56,7 +56,6 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
         }
         if (hasRoleArn(environment)) {
             AWSSecurityTokenService defaultStsClientV1 = AWSSecurityTokenServiceClientBuilder.standard()
-                                                                                             .withRegion(Regions.AP_SOUTHEAST_1)
                                                                                              .build();
 
             AWSCredentialsProvider awsCredentialsProvider = new STSAssumeRoleSessionCredentialsProvider.Builder(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_ROLE_ARN,
