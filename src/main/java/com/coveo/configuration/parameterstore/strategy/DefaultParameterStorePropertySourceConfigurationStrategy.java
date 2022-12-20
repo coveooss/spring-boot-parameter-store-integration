@@ -1,5 +1,10 @@
 package com.coveo.configuration.parameterstore.strategy;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
@@ -44,12 +49,27 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
     private AWSSimpleSystemsManagement buildSSMClient(ConfigurableEnvironment environment,
                                                       AWSSimpleSystemsManagementClientBuilder ssmClientBuilder)
     {
+        AWSSimpleSystemsManagementClientBuilder awsSimpleSystemsManagementClientBuilder = ssmClientBuilder;
         if (hasCustomEndpoint(environment)) {
-            return ssmClientBuilder.withEndpointConfiguration(new EndpointConfiguration(getCustomEndpoint(environment),
-                                                                                        getSigningRegion(environment)))
-                                   .build();
+            awsSimpleSystemsManagementClientBuilder = ssmClientBuilder.withEndpointConfiguration(new EndpointConfiguration(getCustomEndpoint(environment),
+                                                                                                                           getSigningRegion(environment)));
         }
-        return ssmClientBuilder.build();
+        if (hasRoleArn(environment)) {
+            AWSSecurityTokenService defaultStsClientV1 = AWSSecurityTokenServiceClientBuilder.standard()
+                                                                                             .withRegion(Regions.AP_SOUTHEAST_1)
+                                                                                             .build();
+
+            AWSCredentialsProvider awsCredentialsProvider = new STSAssumeRoleSessionCredentialsProvider.Builder(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_ROLE_ARN,
+                                                                                                                "aws-sdk-java-v1").withStsClient(defaultStsClientV1)
+                                                                                                                                  .build();
+            awsSimpleSystemsManagementClientBuilder = ssmClientBuilder.withCredentials(awsCredentialsProvider);
+        }
+        return awsSimpleSystemsManagementClientBuilder.build();
+    }
+
+    private boolean hasRoleArn(ConfigurableEnvironment environment)
+    {
+        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_ROLE_ARN);
     }
 
     private boolean hasCustomEndpoint(ConfigurableEnvironment environment)

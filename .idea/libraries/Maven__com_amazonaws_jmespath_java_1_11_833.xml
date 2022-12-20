@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.amazonaws:jmespath-java:1.11.833">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/amazonaws/jmespath-java/1.11.833/jmespath-java-1.11.833.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/amazonaws/jmespath-java/1.11.833/jmespath-java-1.11.833-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/amazonaws/jmespath-java/1.11.833/jmespath-java-1.11.833-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
