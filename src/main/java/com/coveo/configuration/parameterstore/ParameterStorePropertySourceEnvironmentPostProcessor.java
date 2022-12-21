@@ -1,5 +1,9 @@
 package com.coveo.configuration.parameterstore;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
@@ -28,11 +32,24 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
 
     private AWSSimpleSystemsManagementClientBuilder preconfigureSSMClientBuilder(ConfigurableEnvironment environment)
     {
-        return AWSSimpleSystemsManagementClientBuilder.standard()
-                                                      .withClientConfiguration(new ClientConfigurationFactory().getConfig()
-                                                                                                               .withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(environment.getProperty(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY,
-                                                                                                                                                                                                                          Integer.class,
-                                                                                                                                                                                                                          PredefinedRetryPolicies.DEFAULT_MAX_ERROR_RETRY))));
+
+        AWSSimpleSystemsManagementClientBuilder awsSimpleSystemsManagementClientBuilder = AWSSimpleSystemsManagementClientBuilder.standard();
+        if (hasRoleArn(environment)) {
+            AWSSecurityTokenService defaultStsClientV1 = AWSSecurityTokenServiceClientBuilder.standard()
+                .build();
+
+            AWSCredentialsProvider awsCredentialsProvider = new STSAssumeRoleSessionCredentialsProvider
+                .Builder(environment.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_ROLE_ARN), "aws-sdk-java-v1")
+                .withStsClient(defaultStsClientV1)
+                .build();
+            awsSimpleSystemsManagementClientBuilder = awsSimpleSystemsManagementClientBuilder.withCredentials(awsCredentialsProvider);
+        }
+        awsSimpleSystemsManagementClientBuilder = awsSimpleSystemsManagementClientBuilder
+            .withClientConfiguration(new ClientConfigurationFactory().getConfig()
+                .withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(environment.getProperty(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY,
+                    Integer.class,
+                    PredefinedRetryPolicies.DEFAULT_MAX_ERROR_RETRY))));
+        return awsSimpleSystemsManagementClientBuilder;                                                                                                                                                                                    PredefinedRetryPolicies.DEFAULT_MAX_ERROR_RETRY))));
     }
 
     private ParameterStorePropertySourceConfigurationStrategy getParameterStorePropertySourceConfigurationStrategy(ConfigurableEnvironment environment)
@@ -56,6 +73,10 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
     private boolean isMultiRegionEnabled(ConfigurableEnvironment environment)
     {
         return environment.containsProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS);
+    }
+
+    private boolean hasRoleArn(ConfigurableEnvironment environment) {
+        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_ROLE_ARN);
     }
 
     @Override

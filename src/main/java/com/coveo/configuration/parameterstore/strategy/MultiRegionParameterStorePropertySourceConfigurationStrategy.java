@@ -1,10 +1,5 @@
 package com.coveo.configuration.parameterstore.strategy;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,16 +24,6 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
         boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                    Boolean.class,
                                                    Boolean.FALSE);
-        if (hasRoleArn(environment)) {
-            AWSSecurityTokenService defaultStsClientV1 = AWSSecurityTokenServiceClientBuilder.standard()
-                .build();
-
-            AWSCredentialsProvider awsCredentialsProvider = new STSAssumeRoleSessionCredentialsProvider.Builder(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_ROLE_ARN,
-                "aws-sdk-java-v1").withStsClient(defaultStsClientV1)
-                .build();
-
-            ssmClientBuilder = ssmClientBuilder.withCredentials(awsCredentialsProvider);
-        }
 
         List<String> regions = getRegions(environment);
 
@@ -53,18 +38,12 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
         environment.getPropertySources()
                    .addFirst(buildParameterStorePropertySource(ssmClientBuilder, lastRegion, haltBoot));
 
-        AWSSimpleSystemsManagementClientBuilder finalSsmClientBuilder = ssmClientBuilder;
         regions.stream()
                .skip(1)
                .forEach(region -> environment.getPropertySources()
-                                             .addFirst(buildParameterStorePropertySource(
-                                                 finalSsmClientBuilder,
+                                             .addFirst(buildParameterStorePropertySource(ssmClientBuilder,
                                                                                          region,
                                                                                          false)));
-    }
-
-    private boolean hasRoleArn(ConfigurableEnvironment environment) {
-        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_ROLE_ARN);
     }
 
     private ParameterStorePropertySource buildParameterStorePropertySource(AWSSimpleSystemsManagementClientBuilder ssmClientBuilder,
