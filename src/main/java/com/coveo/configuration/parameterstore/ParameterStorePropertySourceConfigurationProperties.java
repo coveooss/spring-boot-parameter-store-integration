@@ -16,6 +16,7 @@ public final class ParameterStorePropertySourceConfigurationProperties
     public static final String HALT_BOOT = joinWithDot(PROPERTY_SOURCE_PREFIX, "haltBoot");
 
     public static final String SSM_CLIENT_CUSTOM_ENDPOINT = joinWithDot(SSM_CLIENT_ENDPOINT_CONFIG_PREFIX, "endpoint");
+    public static final String SSM_CLIENT_ROLE_ARN = joinWithDot(SOURCE_PREFIX, SSM_CLIENT, "roleArn");
     public static final String SSM_CLIENT_SIGNING_REGION = joinWithDot(SSM_CLIENT_ENDPOINT_CONFIG_PREFIX,
                                                                        "signingRegion");
     public static final String MULTI_REGION_SSM_CLIENT_REGIONS = joinWithDot(SOURCE_PREFIX,
