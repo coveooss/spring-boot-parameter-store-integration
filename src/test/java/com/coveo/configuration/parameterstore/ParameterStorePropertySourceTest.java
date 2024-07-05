@@ -1,17 +1,15 @@
 package com.coveo.configuration.parameterstore;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
+import static com.google.common.truth.Truth.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ParameterStorePropertySourceTest
 {
     private static final String VALID_PROPERTY_NAME = "/validproperty";
@@ -22,11 +20,10 @@ public class ParameterStorePropertySourceTest
 
     private ParameterStorePropertySource parameterStorePropertySource;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         parameterStorePropertySource = new ParameterStorePropertySource("someuselessname", parameterStoreSourceMock);
-        when(parameterStoreSourceMock.getProperty(VALID_PROPERTY_NAME)).thenReturn(VALID_VALUE);
     }
 
     @Test
@@ -34,16 +31,18 @@ public class ParameterStorePropertySourceTest
     {
         Object value = parameterStorePropertySource.getProperty("somepropswithoutslashbefore");
 
-        assertThat(value, is(nullValue()));
+        assertThat(value).isNull();
         verify(parameterStoreSourceMock, never()).getProperty(any());
     }
 
     @Test
     public void testGetProperty()
     {
+        when(parameterStoreSourceMock.getProperty(VALID_PROPERTY_NAME)).thenReturn(VALID_VALUE);
+
         Object value = parameterStorePropertySource.getProperty(VALID_PROPERTY_NAME);
 
-        assertThat(value, is(VALID_VALUE));
+        assertThat(value).isEqualTo(VALID_VALUE);
         verify(parameterStoreSourceMock).getProperty(VALID_PROPERTY_NAME);
     }
 }

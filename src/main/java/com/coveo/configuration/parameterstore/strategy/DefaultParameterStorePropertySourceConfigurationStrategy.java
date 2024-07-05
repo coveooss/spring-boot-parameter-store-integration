@@ -2,29 +2,32 @@ package com.coveo.configuration.parameterstore.strategy;
 
 import org.springframework.core.env.ConfigurableEnvironment;
 
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
-import com.amazonaws.regions.AwsRegionProviderChain;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
 import com.coveo.configuration.parameterstore.ParameterStoreSource;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.regions.providers.AwsRegionProviderChain;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.SsmClientBuilder;
+
+import java.net.URI;
+import java.util.Objects;
 
 public class DefaultParameterStorePropertySourceConfigurationStrategy
         implements ParameterStorePropertySourceConfigurationStrategy
 {
     private static final String PARAMETER_STORE_PROPERTY_SOURCE_NAME = "AWSParameterStorePropertySource";
 
-    private AwsRegionProviderChain awsRegionProviderChain;
+    private final AwsRegionProviderChain awsRegionProviderChain;
 
     public DefaultParameterStorePropertySourceConfigurationStrategy(AwsRegionProviderChain awsRegionProviderChain)
     {
-        this.awsRegionProviderChain = awsRegionProviderChain;
+        this.awsRegionProviderChain = Objects.requireNonNull(awsRegionProviderChain);
     }
 
     @Override
     public void configureParameterStorePropertySources(ConfigurableEnvironment environment,
-                                                       AWSSimpleSystemsManagementClientBuilder ssmClientBuilder)
+                                                       SsmClientBuilder ssmClientBuilder)
     {
         boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                    Boolean.class,
@@ -34,19 +37,17 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
                                                                haltBoot));
     }
 
-    private ParameterStorePropertySource buildParameterStorePropertySource(AWSSimpleSystemsManagement ssmClient,
-                                                                           boolean haltBoot)
+    private ParameterStorePropertySource buildParameterStorePropertySource(SsmClient ssmClient, boolean haltBoot)
     {
         return new ParameterStorePropertySource(PARAMETER_STORE_PROPERTY_SOURCE_NAME,
                                                 new ParameterStoreSource(ssmClient, haltBoot));
     }
 
-    private AWSSimpleSystemsManagement buildSSMClient(ConfigurableEnvironment environment,
-                                                      AWSSimpleSystemsManagementClientBuilder ssmClientBuilder)
+    private SsmClient buildSSMClient(ConfigurableEnvironment environment, SsmClientBuilder ssmClientBuilder)
     {
         if (hasCustomEndpoint(environment)) {
-            return ssmClientBuilder.withEndpointConfiguration(new EndpointConfiguration(getCustomEndpoint(environment),
-                                                                                        getSigningRegion(environment)))
+            return ssmClientBuilder.endpointOverride(URI.create(getCustomEndpoint(environment)))
+                                   .region(Region.of(getSigningRegion(environment)))
                                    .build();
         }
         return ssmClientBuilder.build();
@@ -65,6 +66,6 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
     private String getSigningRegion(ConfigurableEnvironment environment)
     {
         return environment.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION,
-                                       awsRegionProviderChain.getRegion());
+                                       awsRegionProviderChain.getRegion().toString());
     }
 }

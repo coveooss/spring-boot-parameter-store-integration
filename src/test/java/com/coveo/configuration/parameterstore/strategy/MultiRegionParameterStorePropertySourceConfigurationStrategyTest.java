@@ -1,30 +1,31 @@
 package com.coveo.configuration.parameterstore.strategy;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.StringEndsWith.endsWith;
-import static org.junit.Assert.assertThat;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
 {
     private static final String[] SIGNING_REGIONS = { "ownRegion", "mainRegion", "defaultRegion" };
@@ -35,16 +36,19 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     private ConfigurableEnvironment configurableEnvironmentMock;
     @Mock
     private MutablePropertySources mutablePropertySourcesMock;
+    @Mock
+    private SsmClientBuilder ssmClientBuilderMock;
+    @Mock
+    private SsmClient ssmClientMock;
 
     @Captor
     private ArgumentCaptor<ParameterStorePropertySource> parameterStorePropertySourceArgumentCaptor;
 
     private MultiRegionParameterStorePropertySourceConfigurationStrategy strategy;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
-        when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.FALSE);
@@ -57,8 +61,11 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     @Test
     public void testShouldAddPropertySourceForEverySigningRegionsInOrderOfPrecedence()
     {
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+        when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
+        when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
+        when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
+
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
         verify(mutablePropertySourcesMock, times(3)).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
 
@@ -71,12 +78,14 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     @Test
     public void testHaltBootIsTrueThenOnlyLastRegionShouldHaltBoot()
     {
+        when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
+        when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
+        when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.TRUE);
 
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
         verify(mutablePropertySourcesMock, times(3)).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
 
@@ -89,14 +98,16 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     @Test
     public void testWithSingleRegion()
     {
+        when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
+        when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
+        when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                      Boolean.class,
                                                      Boolean.FALSE)).thenReturn(Boolean.TRUE);
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                                                      String[].class)).thenReturn(SINGLE_SIGNING_REGIONS);
 
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+        strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
         verify(mutablePropertySourcesMock).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
         verifyParameterStorePropertySource(parameterStorePropertySourceArgumentCaptor.getValue(),
@@ -104,21 +115,22 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
                                            Boolean.TRUE);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testShouldThrowWhenRegionsIsEmpty()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                                                      String[].class)).thenReturn(EMPTY_REGIONS);
 
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
-                                                        AWSSimpleSystemsManagementClientBuilder.standard());
+        assertThrows(IllegalArgumentException.class,
+                     () -> strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
+                                                                           ssmClientBuilderMock));
     }
 
     private void verifyParameterStorePropertySource(ParameterStorePropertySource actual,
                                                     String region,
                                                     Boolean haltBoot)
     {
-        assertThat(actual.getName(), endsWith("_" + region));
-        assertThat(ReflectionTestUtils.getField(actual.getSource(), "haltBoot"), is(haltBoot));
+        assertThat(actual.getName()).endsWith("_" + region);
+        assertThat(ReflectionTestUtils.getField(actual.getSource(), "haltBoot")).isEqualTo(haltBoot);
     }
 }
