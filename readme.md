@@ -9,15 +9,15 @@ The Spring Boot Parameter Store Integration is a tiny library used to integrate 
 ## Requirements
 The library uses:
 
-- [Spring Boot](https://spring.io/projects/spring-boot) 1.5.22.RELEASE
-- [AWS Java SDK](https://aws.amazon.com/sdk-for-java/) 1.11.795
+- [Spring Boot](https://spring.io/projects/spring-boot)
+- [AWS Java SDK v2](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/home.html) 2.x
 
 Those can be overridden in your `pom.xml`.  
 
 The library was tested and worked properly with:
 
-- [Spring Boot](https://spring.io/projects/spring-boot) 1.4.x, 1.5.x and 2.0.x
-- [AWS Java SDK](https://aws.amazon.com/sdk-for-java/) >= 1.11.164
+- [Spring Boot](https://spring.io/projects/spring-boot) 1.4.x, 1.5.x, 2.x and 3.x
+- [AWS Java SDK](https://aws.amazon.com/sdk-for-java/) >= 2.x
 
 ## Unleashing the Magic
 
@@ -26,7 +26,7 @@ The library was tested and worked properly with:
 <dependency>
     <groupId>com.coveo</groupId>
     <artifactId>spring-boot-parameter-store-integration</artifactId>
-    <version>1.5.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
