@@ -1,16 +1,19 @@
 package com.coveo.configuration.parameterstore.strategy;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.CollectionUtils;
 
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
 import com.coveo.configuration.parameterstore.ParameterStoreSource;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 
 public class MultiRegionParameterStorePropertySourceConfigurationStrategy
         implements ParameterStorePropertySourceConfigurationStrategy
@@ -19,7 +22,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
 
     @Override
     public void configureParameterStorePropertySources(ConfigurableEnvironment environment,
-                                                       AWSSimpleSystemsManagementClientBuilder ssmClientBuilder)
+                                                       SsmClientBuilder ssmClientBuilder)
     {
         boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                    Boolean.class,
@@ -46,7 +49,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
                                                                                          false)));
     }
 
-    private ParameterStorePropertySource buildParameterStorePropertySource(AWSSimpleSystemsManagementClientBuilder ssmClientBuilder,
+    private ParameterStorePropertySource buildParameterStorePropertySource(SsmClientBuilder ssmClientBuilder,
                                                                            String region,
                                                                            boolean haltBoot)
     {
@@ -54,16 +57,16 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
                 + region, new ParameterStoreSource(buildSSMClient(ssmClientBuilder, region), haltBoot));
     }
 
-    private AWSSimpleSystemsManagement buildSSMClient(AWSSimpleSystemsManagementClientBuilder ssmClientBuilder,
-                                                      String region)
+    private SsmClient buildSSMClient(SsmClientBuilder ssmClientBuilder, String region)
     {
-        return ssmClientBuilder.withRegion(region).build();
+        return ssmClientBuilder.region(Region.of(region)).build();
     }
 
     private List<String> getRegions(ConfigurableEnvironment environment)
     {
-        List<String> regions = CollectionUtils.arrayToList(environment.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
-                                                                                   String[].class));
+        List<String> regions = Arrays.asList(Optional.ofNullable(environment.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
+                                                                                         String[].class))
+                                                     .orElseGet(() -> new String[0]));
 
         if (CollectionUtils.isEmpty(regions)) {
             throw new IllegalArgumentException(String.format("To enable multi region support, the property '%s' must not be empty.",

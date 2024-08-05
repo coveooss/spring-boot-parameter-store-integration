@@ -5,14 +5,17 @@
 
     <groupId>com.coveo</groupId>
     <artifactId>spring-boot-parameter-store-integration</artifactId>
-    <version>1.5.0</version>
+    <version>2.0.0</version>
 
     <name>Spring Boot Parameter Store Integration</name>
     <description>An integration of Amazon Web Services' Systems Manager Parameter Store for Spring Boot's properties injection.</description>
     <url>https://github.com/coveo/spring-boot-parameter-store-integration</url>
 
     <properties>
+        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jackson.version>2.17.1</jackson.version>
+        <spring-boot.version>3.3.1</spring-boot.version>
     </properties>
 
     <licenses>
@@ -26,14 +29,19 @@
         <developer>
             <name>Frederic Boutin</name>
             <organization>Coveo</organization>
-            <organizationUrl>https://github.com/coveo</organizationUrl>
+            <organizationUrl>https://github.com/coveooss</organizationUrl>
+        </developer>
+        <developer>
+            <name>Jacques-Etienne Beaudet</name>
+            <organization>Coveo</organization>
+            <organizationUrl>https://github.com/coveooss</organizationUrl>
         </developer>
     </developers>
 
     <scm>
-        <connection>scm:git:git@github.com:coveo/spring-boot-parameter-store-integration.git</connection>
-        <developerConnection>scm:git:git@github.com:coveo/spring-boot-parameter-store-integration.git</developerConnection>
-        <url>http://github.com/coveo/spring-boot-parameter-store-integration</url>
+        <connection>scm:git:git@github.com:coveooss/spring-boot-parameter-store-integration.git</connection>
+        <developerConnection>scm:git:git@github.com:coveooss/spring-boot-parameter-store-integration.git</developerConnection>
+        <url>http://github.com/coveooss/spring-boot-parameter-store-integration</url>
     </scm>
 
     <dependencyManagement>
@@ -41,9 +49,23 @@
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
-                <version>2.10.3</version>
+                <version>${jackson.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.26.15</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -52,20 +74,28 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
-            <version>1.5.22.RELEASE</version>
         </dependency>
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-ssm</artifactId>
-            <version>1.11.833</version>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>ssm</artifactId>
         </dependency>
-
         <!-- Test libraries -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>1.5.21.RELEASE</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.truth</groupId>
+            <artifactId>truth</artifactId>
+            <version>1.4.3</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>junit</artifactId>
+                    <groupId>junit</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
@@ -106,10 +136,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.7.0</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
             </plugin>
         </plugins>
 

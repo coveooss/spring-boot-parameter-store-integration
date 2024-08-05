@@ -4,14 +4,17 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Profiles;
 import org.springframework.util.ObjectUtils;
 
-import com.amazonaws.ClientConfigurationFactory;
-import com.amazonaws.retry.PredefinedRetryPolicies;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategy;
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategyFactory;
 import com.coveo.configuration.parameterstore.strategy.StrategyType;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.internal.retry.SdkDefaultRetrySetting;
+import software.amazon.awssdk.core.retry.RetryMode;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 
 public class ParameterStorePropertySourceEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered
 {
@@ -26,13 +29,16 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
         }
     }
 
-    private AWSSimpleSystemsManagementClientBuilder preconfigureSSMClientBuilder(ConfigurableEnvironment environment)
+    private SsmClientBuilder preconfigureSSMClientBuilder(ConfigurableEnvironment environment)
     {
-        return AWSSimpleSystemsManagementClientBuilder.standard()
-                                                      .withClientConfiguration(new ClientConfigurationFactory().getConfig()
-                                                                                                               .withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(environment.getProperty(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY,
-                                                                                                                                                                                                                          Integer.class,
-                                                                                                                                                                                                                          PredefinedRetryPolicies.DEFAULT_MAX_ERROR_RETRY))));
+        Integer maxRetries = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY,
+                                                     Integer.class,
+                                                     SdkDefaultRetrySetting.maxAttempts(RetryMode.STANDARD));
+        ClientOverrideConfiguration clientOverrideConfiguration = ClientOverrideConfiguration.builder()
+                                                                                             .retryStrategy(configurator -> configurator.maxAttempts(maxRetries
+                                                                                                     + 1))
+                                                                                             .build();
+        return SsmClient.builder().overrideConfiguration(clientOverrideConfiguration);
     }
 
     private ParameterStorePropertySourceConfigurationStrategy getParameterStorePropertySourceConfigurationStrategy(ConfigurableEnvironment environment)
@@ -48,9 +54,9 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
         return environment.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
                                        Boolean.class,
                                        Boolean.FALSE)
-                || environment.acceptsProfiles(ParameterStorePropertySourceConfigurationProperties.ENABLED_PROFILE)
+                || environment.acceptsProfiles(Profiles.of(ParameterStorePropertySourceConfigurationProperties.ENABLED_PROFILE))
                 || (!ObjectUtils.isEmpty(userDefinedEnabledProfiles)
-                        && environment.acceptsProfiles(userDefinedEnabledProfiles));
+                        && environment.acceptsProfiles(Profiles.of(userDefinedEnabledProfiles)));
     }
 
     private boolean isMultiRegionEnabled(ConfigurableEnvironment environment)
