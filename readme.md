@@ -31,10 +31,17 @@ The library was tested and worked properly with:
 ```
 
 #### There are 3 ways to enable this lib after importing it in your pom.xml, pick yours:
-- Set `awsParameterStorePropertySource.enabled` to `true` (yml, properties, or anything [here](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html))
+- Set `aws-parameter-store-property-source.enabled` to `true` (yml, properties, or anything [here](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html))
 - Add the profile `awsParameterStorePropertySourceEnabled` to your active profiles
-- Set `awsParameterStorePropertySource.enabledProfiles` with some custom profiles that should integrate the AWS Parameter Store using a comma-separated list such as `MyProductionProfile,MyTestProfile`  
+- Set `aws-parameter-store-property-source.enabled-profiles` with some custom profiles that should integrate the AWS Parameter Store using a comma-separated list such as `MyProductionProfile,MyTestProfile`  
 **Important**: using other list injecting methods like a yaml list won't work because this property gets loaded too early in the boot process.
+
+#### Relaxed Binding
+This library supports Spring Boot's [relaxed binding](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config.typesafe-configuration-properties.relaxed-binding). All configuration properties can be specified in any of the following formats:
+- **kebab-case** (recommended): `aws-parameter-store-property-source.enabled`
+- **camelCase**: `awsParameterStorePropertySource.enabled`
+- **snake_case**: `aws_parameter_store_property_source.enabled`
+- **UPPER_CASE** (environment variables): `AWS_PARAMETER_STORE_PROPERTY_SOURCE_ENABLED`
 
 #### Using the lib:
 Use a property that is prefixed with `/` somewhere such as
@@ -50,9 +57,9 @@ The AWS Parameter Store already uses this naming pattern to classify your proper
 
 The lib uses the [DefaultAWSCredentialProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html) and the [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html). This means that if your code is running on an EC2 instance that has access to a Parameter Store property and its associated KMS key, the library should be able to fetch it without any configuration.
 
-If you need to use a custom endpoint for the AWS Simple Systems Management client, you can set the property `awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint`. For more details, see the [AWSClientBuilder.EndpointConfiguration](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/client/builder/AwsClientBuilder.EndpointConfiguration.html) class, which is used to configure the client. By default, the associated signing region is fetched from [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html), but if you need to specify a different one, you can use the property `awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion`. Note that this only sets the `signingRegion` for the endpoint and not the aws client region. Region configuration should be done using the providers available from the [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html).
+If you need to use a custom endpoint for the AWS Simple Systems Management client, you can set the property `aws-parameter-store-source.ssm-client.endpoint-configuration.endpoint`. For more details, see the [AWSClientBuilder.EndpointConfiguration](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/client/builder/AwsClientBuilder.EndpointConfiguration.html) class, which is used to configure the client. By default, the associated signing region is fetched from [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html), but if you need to specify a different one, you can use the property `aws-parameter-store-source.ssm-client.endpoint-configuration.signing-region`. Note that this only sets the `signingRegion` for the endpoint and not the aws client region. Region configuration should be done using the providers available from the [DefaultAWSRegionProviderChain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/regions/DefaultAwsRegionProviderChain.html).
 
-If you ever hit some AWS exceptions, there is a parameter that can allow the Parameter Store client to retry more than the default 3 times (AWS SDK default). Just use the property `awsParameterStoreSource.ssmClient.maxErrorRetry` to increase the number of retries.
+If you ever hit some AWS exceptions, there is a parameter that can allow the Parameter Store client to retry more than the default 3 times (AWS SDK default). Just use the property `aws-parameter-store-source.ssm-client.max-error-retry` to increase the number of retries.
 
 ## Using Spring Boot's Placeholder Properties
 
@@ -73,7 +80,7 @@ When Spring Boot encounters your environment variable, it doesn't inject `${/my/
 
 The default behaviour of a PropertySource when it can't find a property is to return `null`, and then the PropertyResolver iterates on every other PropertySource to find a matching value. This is the default behaviour for this lib.
 
-If you want to halt the boot when a property prefixed with `/` isn't found in the Parameter Store, just set `awsParameterStorePropertySource.haltBoot` to `true` in your properties. We personally use this to prevent injecting default properties in a production environment.
+If you want to halt the boot when a property prefixed with `/` isn't found in the Parameter Store, just set `aws-parameter-store-property-source.halt-boot` to `true` in your properties. We personally use this to prevent injecting default properties in a production environment.
 
 ## Spring Cloud
 
@@ -81,14 +88,14 @@ TL;DR: Define the enabling properties in the bootstrap properties (`bootstrap.ym
 
 Spring Cloud has a second application context named bootstrap that gets initialized before Spring Boot's normal application context. Since this library uses an EnvironmentPostPrecessor to add the Parameter Store PropertySource, it will get triggered twice if you enabled in the bootstrap properties. This allows it to work in both context and to be on top of the property sources in both. For this reason, if you need to fetch Parameter Store properties in the bootstrap context, you should use the bootstrap properties to enable the library. Otherwise you can enable it in the normal Spring Boot context and it will work fine.
 
-If you still want the post processor to run twice or if you are using [spring-boot-devtools](https://docs.spring.io/spring-boot/docs/current/reference/html/using-spring-boot.html#using-boot-devtools-restart), you can set the optional property `awsParameterStorePropertySource.supportMultipleApplicationContexts` to `true`. The default property value is `false`to prevent multiple initializations. If you are also using Spring Cloud, this property will only work if set in the bootstrap properties.
+If you still want the post processor to run twice or if you are using [spring-boot-devtools](https://docs.spring.io/spring-boot/docs/current/reference/html/using-spring-boot.html#using-boot-devtools-restart), you can set the optional property `aws-parameter-store-property-source.support-multiple-application-contexts` to `true`. The default property value is `false`to prevent multiple initializations. If you are also using Spring Cloud, this property will only work if set in the bootstrap properties.
 
 ## Multi-region support
-- Set `awsParameterStoreSource.multiRegion.ssmClient.regions` to a comma-separated string of regions from which you want to retrieve parameters. Example: `us-east-1,us-east-2`. Doing so will add a `ParameterStorePropertySource` object for each region specified, and this object will list the parameters associated with this region. The integration searches for parameters in regions following the order specified, and stops at the first occurrence. You should therefore put the regions **in order of precedence**.  
+- Set `aws-parameter-store-source.multi-region.ssm-client.regions` to a comma-separated string of regions from which you want to retrieve parameters. Example: `us-east-1,us-east-2`. Doing so will add a `ParameterStorePropertySource` object for each region specified, and this object will list the parameters associated with this region. The integration searches for parameters in regions following the order specified, and stops at the first occurrence. You should therefore put the regions **in order of precedence**.  
 **Reminder**: using other list injecting methods like a yaml list won't work because this property gets loaded too early in the boot process.
-- If you want to halt the boot when a property isn't found in any of the specified regions, just set `awsParameterStorePropertySource.haltBoot` to `true` in your properties.
+- If you want to halt the boot when a property isn't found in any of the specified regions, just set `aws-parameter-store-property-source.halt-boot` to `true` in your properties.
 - Make sure that your service has the necessary permissions to access parameters in the specified regions.  
-**Important**: If set, this property takes precedence over `awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint` and `awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion`. They are mutually exclusive.  
+**Important**: If set, this property takes precedence over `aws-parameter-store-source.ssm-client.endpoint-configuration.endpoint` and `aws-parameter-store-source.ssm-client.endpoint-configuration.signing-region`. They are mutually exclusive.  
 
 ## Contributing
 Open an issue to report bugs or to request additional features. Pull requests are always welcome.

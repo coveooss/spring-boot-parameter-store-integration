@@ -1,9 +1,11 @@
 package com.coveo.configuration.parameterstore.strategy;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
@@ -27,13 +30,14 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     @Mock
     private ConfigurableEnvironment configurableEnvironmentMock;
     @Mock
-    private MutablePropertySources mutablePropertySourcesMock;
-    @Mock
     private AwsRegionProviderChain awsRegionProviderChain;
     @Mock
     private SsmClientBuilder ssmClientBuilderMock;
     @Mock
     private SsmClient ssmClientMock;
+
+    private Map<String, Object> propertyMap;
+    private MutablePropertySources propertySources;
 
     private DefaultParameterStorePropertySourceConfigurationStrategy strategy;
 
@@ -41,10 +45,11 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     public void setUp()
     {
         when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
-        when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
+
+        propertyMap = new HashMap<>();
+        propertySources = new MutablePropertySources();
+        propertySources.addFirst(new MapPropertySource("test", propertyMap));
+        when(configurableEnvironmentMock.getPropertySources()).thenReturn(propertySources);
 
         strategy = new DefaultParameterStorePropertySourceConfigurationStrategy(awsRegionProviderChain);
     }
@@ -54,7 +59,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     {
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
-        verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
+        assertPropertySourceAdded();
     }
 
     @Test
@@ -63,13 +68,27 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
         when(ssmClientBuilderMock.endpointOverride(any())).thenReturn(ssmClientBuilderMock);
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
         when(awsRegionProviderChain.getRegion()).thenReturn(PROVIDER_CHAIN_REGION);
-        when(configurableEnvironmentMock.getProperty(eq(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION),
-                                                     any(String.class))).thenReturn(PROVIDER_CHAIN_REGION.toString());
-        when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT)).thenReturn("customEndpoint");
+
+        propertyMap.put("aws-parameter-store-source.ssm-client.endpoint-configuration.endpoint", "customEndpoint");
+        propertyMap.put("aws-parameter-store-source.ssm-client.endpoint-configuration.signing-region",
+                        PROVIDER_CHAIN_REGION.toString());
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
-        verify(mutablePropertySourcesMock).addFirst(any(ParameterStorePropertySource.class));
+        assertPropertySourceAdded();
+    }
+
+    private void assertPropertySourceAdded()
+    {
+        // The strategy adds property sources via addFirst on the real MutablePropertySources,
+        // so we verify by checking the property sources contain the expected entry
+        boolean found = false;
+        for (org.springframework.core.env.PropertySource<?> ps : propertySources) {
+            if (ps instanceof ParameterStorePropertySource) {
+                found = true;
+                break;
+            }
+        }
+        assert found : "Expected a ParameterStorePropertySource to be added";
     }
 }

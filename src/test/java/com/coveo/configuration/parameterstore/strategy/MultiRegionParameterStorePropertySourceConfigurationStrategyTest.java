@@ -3,21 +3,22 @@ package com.coveo.configuration.parameterstore.strategy;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
@@ -30,30 +31,28 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
 {
     private static final String[] SIGNING_REGIONS = { "ownRegion", "mainRegion", "defaultRegion" };
     private static final String[] SINGLE_SIGNING_REGIONS = { "ownRegion" };
-    private static final String[] EMPTY_REGIONS = {};
 
     @Mock
     private ConfigurableEnvironment configurableEnvironmentMock;
-    @Mock
-    private MutablePropertySources mutablePropertySourcesMock;
     @Mock
     private SsmClientBuilder ssmClientBuilderMock;
     @Mock
     private SsmClient ssmClientMock;
 
-    @Captor
-    private ArgumentCaptor<ParameterStorePropertySource> parameterStorePropertySourceArgumentCaptor;
+    private Map<String, Object> propertyMap;
+    private MutablePropertySources propertySources;
 
     private MultiRegionParameterStorePropertySourceConfigurationStrategy strategy;
 
     @BeforeEach
     public void setUp()
     {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
-                                                     String[].class)).thenReturn(SIGNING_REGIONS);
+        propertyMap = new HashMap<>();
+        propertyMap.put("aws-parameter-store-source.multi-region.ssm-client.regions",
+                        String.join(",", SIGNING_REGIONS));
+        propertySources = new MutablePropertySources();
+        propertySources.addFirst(new MapPropertySource("test", propertyMap));
+        when(configurableEnvironmentMock.getPropertySources()).thenReturn(propertySources);
 
         strategy = new MultiRegionParameterStorePropertySourceConfigurationStrategy();
     }
@@ -61,69 +60,73 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     @Test
     public void testShouldAddPropertySourceForEverySigningRegionsInOrderOfPrecedence()
     {
-        when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
         when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
-        verify(mutablePropertySourcesMock, times(3)).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
-
-        List<ParameterStorePropertySource> propertySources = parameterStorePropertySourceArgumentCaptor.getAllValues();
-        verifyParameterStorePropertySource(propertySources.get(0), SIGNING_REGIONS[0], Boolean.FALSE);
-        verifyParameterStorePropertySource(propertySources.get(1), SIGNING_REGIONS[1], Boolean.FALSE);
-        verifyParameterStorePropertySource(propertySources.get(2), SIGNING_REGIONS[2], Boolean.FALSE);
+        List<ParameterStorePropertySource> added = getAddedParameterStorePropertySources();
+        assertThat(added).hasSize(3);
+        // addFirst means the last added is first in the list, so the order in propertySources
+        // is: ownRegion (highest precedence), mainRegion, defaultRegion (lowest precedence)
+        verifyParameterStorePropertySource(added.get(0), SIGNING_REGIONS[0], Boolean.FALSE);
+        verifyParameterStorePropertySource(added.get(1), SIGNING_REGIONS[1], Boolean.FALSE);
+        verifyParameterStorePropertySource(added.get(2), SIGNING_REGIONS[2], Boolean.FALSE);
     }
 
     @Test
     public void testHaltBootIsTrueThenOnlyLastRegionShouldHaltBoot()
     {
-        when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
         when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
+        propertyMap.put("aws-parameter-store-property-source.halt-boot", "true");
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
-        verify(mutablePropertySourcesMock, times(3)).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
-
-        List<ParameterStorePropertySource> propertySources = parameterStorePropertySourceArgumentCaptor.getAllValues();
-        verifyParameterStorePropertySource(propertySources.get(0), SIGNING_REGIONS[0], Boolean.TRUE);
-        verifyParameterStorePropertySource(propertySources.get(1), SIGNING_REGIONS[1], Boolean.FALSE);
-        verifyParameterStorePropertySource(propertySources.get(2), SIGNING_REGIONS[2], Boolean.FALSE);
+        List<ParameterStorePropertySource> added = getAddedParameterStorePropertySources();
+        assertThat(added).hasSize(3);
+        // After reversing: defaultRegion is added first (with haltBoot), then mainRegion, then ownRegion
+        // In the propertySources list (addFirst ordering), ownRegion is first (highest precedence)
+        verifyParameterStorePropertySource(added.get(0), SIGNING_REGIONS[0], Boolean.FALSE);
+        verifyParameterStorePropertySource(added.get(1), SIGNING_REGIONS[1], Boolean.FALSE);
+        verifyParameterStorePropertySource(added.get(2), SIGNING_REGIONS[2], Boolean.TRUE);
     }
 
     @Test
     public void testWithSingleRegion()
     {
-        when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
         when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
-                                                     String[].class)).thenReturn(SINGLE_SIGNING_REGIONS);
+        propertyMap.put("aws-parameter-store-property-source.halt-boot", "true");
+        propertyMap.put("aws-parameter-store-source.multi-region.ssm-client.regions",
+                        String.join(",", SINGLE_SIGNING_REGIONS));
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
-        verify(mutablePropertySourcesMock).addFirst(parameterStorePropertySourceArgumentCaptor.capture());
-        verifyParameterStorePropertySource(parameterStorePropertySourceArgumentCaptor.getValue(),
-                                           SINGLE_SIGNING_REGIONS[0],
-                                           Boolean.TRUE);
+        List<ParameterStorePropertySource> added = getAddedParameterStorePropertySources();
+        assertThat(added).hasSize(1);
+        verifyParameterStorePropertySource(added.get(0), SINGLE_SIGNING_REGIONS[0], Boolean.TRUE);
     }
 
     @Test
     public void testShouldThrowWhenRegionsIsEmpty()
     {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
-                                                     String[].class)).thenReturn(EMPTY_REGIONS);
+        propertyMap.put("aws-parameter-store-source.multi-region.ssm-client.regions", "");
 
         assertThrows(IllegalArgumentException.class,
                      () -> strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
                                                                            ssmClientBuilderMock));
+    }
+
+    private List<ParameterStorePropertySource> getAddedParameterStorePropertySources()
+    {
+        List<ParameterStorePropertySource> result = new ArrayList<>();
+        for (PropertySource<?> ps : propertySources) {
+            if (ps instanceof ParameterStorePropertySource) {
+                result.add((ParameterStorePropertySource) ps);
+            }
+        }
+        return result;
     }
 
     private void verifyParameterStorePropertySource(ParameterStorePropertySource actual,

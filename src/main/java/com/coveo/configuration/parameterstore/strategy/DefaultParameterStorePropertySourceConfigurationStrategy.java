@@ -1,5 +1,6 @@
 package com.coveo.configuration.parameterstore.strategy;
 
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
@@ -29,11 +30,11 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
     public void configureParameterStorePropertySources(ConfigurableEnvironment environment,
                                                        SsmClientBuilder ssmClientBuilder)
     {
-        boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
-                                                   Boolean.class,
-                                                   Boolean.FALSE);
+        Binder binder = Binder.get(environment);
+        boolean haltBoot = binder.bind(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT, Boolean.class)
+                                 .orElse(Boolean.FALSE);
         environment.getPropertySources()
-                   .addFirst(buildParameterStorePropertySource(buildSSMClient(environment, ssmClientBuilder),
+                   .addFirst(buildParameterStorePropertySource(buildSSMClient(environment, ssmClientBuilder, binder),
                                                                haltBoot));
     }
 
@@ -43,29 +44,33 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
                                                 new ParameterStoreSource(ssmClient, haltBoot));
     }
 
-    private SsmClient buildSSMClient(ConfigurableEnvironment environment, SsmClientBuilder ssmClientBuilder)
+    private SsmClient buildSSMClient(ConfigurableEnvironment environment,
+                                     SsmClientBuilder ssmClientBuilder,
+                                     Binder binder)
     {
-        if (hasCustomEndpoint(environment)) {
-            return ssmClientBuilder.endpointOverride(URI.create(getCustomEndpoint(environment)))
-                                   .region(Region.of(getSigningRegion(environment)))
+        if (hasCustomEndpoint(binder)) {
+            return ssmClientBuilder.endpointOverride(URI.create(getCustomEndpoint(binder)))
+                                   .region(Region.of(getSigningRegion(binder)))
                                    .build();
         }
         return ssmClientBuilder.build();
     }
 
-    private boolean hasCustomEndpoint(ConfigurableEnvironment environment)
+    private boolean hasCustomEndpoint(Binder binder)
     {
-        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT);
+        return binder.bind(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT, String.class)
+                     .isBound();
     }
 
-    private String getCustomEndpoint(ConfigurableEnvironment environment)
+    private String getCustomEndpoint(Binder binder)
     {
-        return environment.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT);
+        return binder.bind(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT, String.class)
+                     .get();
     }
 
-    private String getSigningRegion(ConfigurableEnvironment environment)
+    private String getSigningRegion(Binder binder)
     {
-        return environment.getProperty(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION,
-                                       awsRegionProviderChain.getRegion().toString());
+        return binder.bind(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION, String.class)
+                     .orElse(awsRegionProviderChain.getRegion().toString());
     }
 }
