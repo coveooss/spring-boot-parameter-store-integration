@@ -67,7 +67,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
     {
         List<String> regions = Arrays.asList(binder.bind(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                                                          String[].class)
-                                                   .orElse(new String[0]));
+                                                   .orElseGet(() -> new String[0]));
 
         if (CollectionUtils.isEmpty(regions)) {
             throw new IllegalArgumentException(String.format("To enable multi region support, the property '%s' must not be empty.",
