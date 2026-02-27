@@ -1,0 +1,52 @@
+name: Release to Maven Central
+
+on:
+  release:
+    types:
+      - released
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Validate release tag
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ ! "$TAG" =~ ^v[0-9] ]]; then
+            echo "::error::Release tag '$TAG' must start with 'v' followed by a version number (e.g., v2.1.0)"
+            exit 1
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      - name: Set project version from release tag
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          # Strip leading 'v' if present (e.g., v2.1.0 -> 2.1.0)
+          VERSION="${VERSION#v}"
+          echo "Setting version to: $VERSION"
+          mvn versions:set --batch-mode --no-transfer-progress -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+
+      - name: Build and deploy to Maven Central
+        run: mvn clean deploy --batch-mode --no-transfer-progress -P release
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSS_SONATYPE_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSS_SONATYPE_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
