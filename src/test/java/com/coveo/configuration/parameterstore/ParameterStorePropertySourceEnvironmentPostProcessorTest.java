@@ -14,6 +14,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -51,6 +52,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     private ParameterStorePropertySourceEnvironmentPostProcessor parameterStorePropertySourceEnvironmentPostProcessor = new ParameterStorePropertySourceEnvironmentPostProcessor();
 
     private Map<String, Object> propertyMap;
+    private MutablePropertySources propertySources;
 
     @BeforeEach
     public void setUp()
@@ -60,7 +62,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         ParameterStorePropertySourceEnvironmentPostProcessor.strategyFactory = strategyFactoryMock;
 
         propertyMap = new HashMap<>();
-        MutablePropertySources propertySources = new MutablePropertySources();
+        propertySources = new MutablePropertySources();
         propertySources.addFirst(new MapPropertySource("test", propertyMap));
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(propertySources);
     }
@@ -85,7 +87,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(propertySources),
+                                                                                      any(Binder.class),
                                                                                       ssmClientBuilderCaptor.capture());
         ssmClientBuilderCaptor.getValue()
                               .overrideConfiguration()
@@ -105,7 +108,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(propertySources),
+                                                                                      any(Binder.class),
                                                                                       any(SsmClientBuilder.class));
         verifyNoInteractions(multiRegionPostProcessStrategyMock);
     }
@@ -119,7 +123,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(propertySources),
+                                                                                      any(Binder.class),
                                                                                       any(SsmClientBuilder.class));
         verifyNoInteractions(multiRegionPostProcessStrategyMock);
     }
@@ -159,7 +164,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verify(multiRegionPostProcessStrategyMock,
-               times(1)).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+               times(1)).configureParameterStorePropertySources(eq(propertySources),
+                                                                any(Binder.class),
                                                                 ssmClientBuilderCaptor.capture());
         ssmClientBuilderCaptor.getValue()
                               .overrideConfiguration()
@@ -180,7 +186,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(propertySources),
+                                                                                      any(Binder.class),
                                                                                       ssmClientBuilderCaptor.capture());
         ssmClientBuilderCaptor.getValue()
                               .overrideConfiguration()
@@ -202,7 +209,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
                                                                                     applicationMock);
 
         verify(multiRegionPostProcessStrategyMock,
-               times(1)).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+               times(1)).configureParameterStorePropertySources(eq(propertySources),
+                                                                any(Binder.class),
                                                                 ssmClientBuilderCaptor.capture());
         ssmClientBuilderCaptor.getValue()
                               .overrideConfiguration()

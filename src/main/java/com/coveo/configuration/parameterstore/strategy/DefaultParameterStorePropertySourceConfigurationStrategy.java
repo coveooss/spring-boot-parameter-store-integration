@@ -1,7 +1,7 @@
 package com.coveo.configuration.parameterstore.strategy;
 
 import org.springframework.boot.context.properties.bind.Binder;
-import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MutablePropertySources;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
@@ -27,15 +27,13 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
     }
 
     @Override
-    public void configureParameterStorePropertySources(ConfigurableEnvironment environment,
+    public void configureParameterStorePropertySources(MutablePropertySources propertySources,
+                                                       Binder binder,
                                                        SsmClientBuilder ssmClientBuilder)
     {
-        Binder binder = Binder.get(environment);
         boolean haltBoot = binder.bind(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT, Boolean.class)
                                  .orElse(Boolean.FALSE);
-        environment.getPropertySources()
-                   .addFirst(buildParameterStorePropertySource(buildSSMClient(environment, ssmClientBuilder, binder),
-                                                               haltBoot));
+        propertySources.addFirst(buildParameterStorePropertySource(buildSSMClient(ssmClientBuilder, binder), haltBoot));
     }
 
     private ParameterStorePropertySource buildParameterStorePropertySource(SsmClient ssmClient, boolean haltBoot)
@@ -44,9 +42,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategy
                                                 new ParameterStoreSource(ssmClient, haltBoot));
     }
 
-    private SsmClient buildSSMClient(ConfigurableEnvironment environment,
-                                     SsmClientBuilder ssmClientBuilder,
-                                     Binder binder)
+    private SsmClient buildSSMClient(SsmClientBuilder ssmClientBuilder, Binder binder)
     {
         if (hasCustomEndpoint(binder)) {
             return ssmClientBuilder.endpointOverride(URI.create(getCustomEndpoint(binder)))

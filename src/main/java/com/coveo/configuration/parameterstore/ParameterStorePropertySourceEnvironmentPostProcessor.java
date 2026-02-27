@@ -24,15 +24,16 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application)
     {
-        if (isParameterStorePropertySourceEnabled(environment)) {
-            getParameterStorePropertySourceConfigurationStrategy(environment).configureParameterStorePropertySources(environment,
-                                                                                                                     preconfigureSSMClientBuilder(environment));
+        Binder binder = Binder.get(environment);
+        if (isParameterStorePropertySourceEnabled(environment, binder)) {
+            getParameterStorePropertySourceConfigurationStrategy(binder).configureParameterStorePropertySources(environment.getPropertySources(),
+                                                                                                                binder,
+                                                                                                                preconfigureSSMClientBuilder(binder));
         }
     }
 
-    private SsmClientBuilder preconfigureSSMClientBuilder(ConfigurableEnvironment environment)
+    private SsmClientBuilder preconfigureSSMClientBuilder(Binder binder)
     {
-        Binder binder = Binder.get(environment);
         Integer maxRetries = binder.bind(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY,
                                          Integer.class)
                                    .orElse(SdkDefaultRetrySetting.maxAttempts(RetryMode.STANDARD));
@@ -43,15 +44,14 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
         return SsmClient.builder().overrideConfiguration(clientOverrideConfiguration);
     }
 
-    private ParameterStorePropertySourceConfigurationStrategy getParameterStorePropertySourceConfigurationStrategy(ConfigurableEnvironment environment)
+    private ParameterStorePropertySourceConfigurationStrategy getParameterStorePropertySourceConfigurationStrategy(Binder binder)
     {
-        StrategyType type = isMultiRegionEnabled(environment) ? StrategyType.MULTI_REGION : StrategyType.DEFAULT;
+        StrategyType type = isMultiRegionEnabled(binder) ? StrategyType.MULTI_REGION : StrategyType.DEFAULT;
         return strategyFactory.getStrategy(type);
     }
 
-    private boolean isParameterStorePropertySourceEnabled(ConfigurableEnvironment environment)
+    private boolean isParameterStorePropertySourceEnabled(ConfigurableEnvironment environment, Binder binder)
     {
-        Binder binder = Binder.get(environment);
         String[] userDefinedEnabledProfiles = binder.bind(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES,
                                                           String[].class)
                                                     .orElse(null);
@@ -62,10 +62,9 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
                         && environment.acceptsProfiles(Profiles.of(userDefinedEnabledProfiles)));
     }
 
-    private boolean isMultiRegionEnabled(ConfigurableEnvironment environment)
+    private boolean isMultiRegionEnabled(Binder binder)
     {
-        return Binder.get(environment)
-                     .bind(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
+        return binder.bind(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                            String[].class)
                      .isBound();
     }

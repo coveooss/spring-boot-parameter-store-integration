@@ -3,10 +3,9 @@ package com.coveo.configuration.parameterstore.strategy;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.boot.context.properties.bind.Binder;
-import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.util.CollectionUtils;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
@@ -22,10 +21,10 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
     private static final String PARAMETER_STORE_PROPERTY_SOURCE_NAME = "MultiRegionAWSParameterStorePropertySource_";
 
     @Override
-    public void configureParameterStorePropertySources(ConfigurableEnvironment environment,
+    public void configureParameterStorePropertySources(MutablePropertySources propertySources,
+                                                       Binder binder,
                                                        SsmClientBuilder ssmClientBuilder)
     {
-        Binder binder = Binder.get(environment);
         boolean haltBoot = binder.bind(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT, Boolean.class)
                                  .orElse(Boolean.FALSE);
 
@@ -39,15 +38,13 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
         String lastRegion = regions.get(0);
 
         // We only want to halt boot (if true) for the last region
-        environment.getPropertySources()
-                   .addFirst(buildParameterStorePropertySource(ssmClientBuilder, lastRegion, haltBoot));
+        propertySources.addFirst(buildParameterStorePropertySource(ssmClientBuilder, lastRegion, haltBoot));
 
         regions.stream()
                .skip(1)
-               .forEach(region -> environment.getPropertySources()
-                                             .addFirst(buildParameterStorePropertySource(ssmClientBuilder,
-                                                                                         region,
-                                                                                         false)));
+               .forEach(region -> propertySources.addFirst(buildParameterStorePropertySource(ssmClientBuilder,
+                                                                                             region,
+                                                                                             false)));
     }
 
     private ParameterStorePropertySource buildParameterStorePropertySource(SsmClientBuilder ssmClientBuilder,

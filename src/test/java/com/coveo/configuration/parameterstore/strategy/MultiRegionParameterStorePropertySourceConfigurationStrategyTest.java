@@ -15,7 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.ConfigurationPropertySources;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
@@ -32,8 +33,6 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     private static final String[] SIGNING_REGIONS = { "ownRegion", "mainRegion", "defaultRegion" };
     private static final String[] SINGLE_SIGNING_REGIONS = { "ownRegion" };
 
-    @Mock
-    private ConfigurableEnvironment configurableEnvironmentMock;
     @Mock
     private SsmClientBuilder ssmClientBuilderMock;
     @Mock
@@ -52,7 +51,6 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
                         String.join(",", SIGNING_REGIONS));
         propertySources = new MutablePropertySources();
         propertySources.addFirst(new MapPropertySource("test", propertyMap));
-        when(configurableEnvironmentMock.getPropertySources()).thenReturn(propertySources);
 
         strategy = new MultiRegionParameterStorePropertySourceConfigurationStrategy();
     }
@@ -63,7 +61,8 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
         when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
 
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
+        Binder binder = new Binder(ConfigurationPropertySources.from(propertySources));
+        strategy.configureParameterStorePropertySources(propertySources, binder, ssmClientBuilderMock);
 
         List<ParameterStorePropertySource> added = getAddedParameterStorePropertySources();
         assertThat(added).hasSize(3);
@@ -81,7 +80,8 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
         when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
         propertyMap.put(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT, "true");
 
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
+        Binder binder = new Binder(ConfigurationPropertySources.from(propertySources));
+        strategy.configureParameterStorePropertySources(propertySources, binder, ssmClientBuilderMock);
 
         List<ParameterStorePropertySource> added = getAddedParameterStorePropertySources();
         assertThat(added).hasSize(3);
@@ -101,7 +101,8 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
         propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                         String.join(",", SINGLE_SIGNING_REGIONS));
 
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
+        Binder binder = new Binder(ConfigurationPropertySources.from(propertySources));
+        strategy.configureParameterStorePropertySources(propertySources, binder, ssmClientBuilderMock);
 
         List<ParameterStorePropertySource> added = getAddedParameterStorePropertySources();
         assertThat(added).hasSize(1);
@@ -113,8 +114,10 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     {
         propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS, "");
 
+        Binder binder = new Binder(ConfigurationPropertySources.from(propertySources));
         assertThrows(IllegalArgumentException.class,
-                     () -> strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
+                     () -> strategy.configureParameterStorePropertySources(propertySources,
+                                                                           binder,
                                                                            ssmClientBuilderMock));
     }
 
@@ -123,8 +126,10 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     {
         propertyMap.remove(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS);
 
+        Binder binder = new Binder(ConfigurationPropertySources.from(propertySources));
         assertThrows(IllegalArgumentException.class,
-                     () -> strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
+                     () -> strategy.configureParameterStorePropertySources(propertySources,
+                                                                           binder,
                                                                            ssmClientBuilderMock));
     }
 

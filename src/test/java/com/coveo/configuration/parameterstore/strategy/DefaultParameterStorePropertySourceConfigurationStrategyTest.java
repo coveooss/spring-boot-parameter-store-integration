@@ -12,7 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.ConfigurationPropertySources;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
@@ -28,8 +29,6 @@ import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 public class DefaultParameterStorePropertySourceConfigurationStrategyTest
 {
     private static final Region PROVIDER_CHAIN_REGION = Region.US_EAST_1;
-    @Mock
-    private ConfigurableEnvironment configurableEnvironmentMock;
     @Mock
     private AwsRegionProviderChain awsRegionProviderChain;
     @Mock
@@ -50,7 +49,6 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
         propertyMap = new HashMap<>();
         propertySources = new MutablePropertySources();
         propertySources.addFirst(new MapPropertySource("test", propertyMap));
-        when(configurableEnvironmentMock.getPropertySources()).thenReturn(propertySources);
 
         strategy = new DefaultParameterStorePropertySourceConfigurationStrategy(awsRegionProviderChain);
     }
@@ -58,7 +56,8 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     @Test
     public void testShouldAddPropertySource()
     {
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
+        Binder binder = new Binder(ConfigurationPropertySources.from(propertySources));
+        strategy.configureParameterStorePropertySources(propertySources, binder, ssmClientBuilderMock);
 
         assertPropertySourceAdded();
     }
@@ -75,7 +74,8 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
         propertyMap.put(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION,
                         PROVIDER_CHAIN_REGION.toString());
 
-        strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
+        Binder binder = new Binder(ConfigurationPropertySources.from(propertySources));
+        strategy.configureParameterStorePropertySources(propertySources, binder, ssmClientBuilderMock);
 
         assertPropertySourceAdded();
     }
