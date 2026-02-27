@@ -79,8 +79,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testParameterStoreIsEnabledWithPropertySetToTrue()
     {
-        propertyMap.put("aws-parameter-store-property-source.enabled", "true");
-        propertyMap.put("aws-parameter-store-source.ssm-client.max-error-retry", MAX_RETRIES);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ENABLED, "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY, MAX_RETRIES);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
@@ -113,7 +113,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testParameterStoreIsEnabledWithCustomProfiles()
     {
-        propertyMap.put("aws-parameter-store-property-source.enabled-profiles", "open,source,this");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES, "open,source,this");
         when(configurableEnvironmentMock.acceptsProfiles(Profiles.of(CUSTOM_PROFILES))).thenReturn(true);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
@@ -137,7 +137,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testParameterStoreIsNotEnabledWithCustomProfilesButNoneOfTheProfilesActive()
     {
-        propertyMap.put("aws-parameter-store-property-source.enabled-profiles", "open,source,this");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES, "open,source,this");
         when(configurableEnvironmentMock.acceptsProfiles(Profiles.of(CUSTOM_PROFILES))).thenReturn(false);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
@@ -150,9 +150,10 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testWhenMultiRegionIsEnabled()
     {
-        propertyMap.put("aws-parameter-store-property-source.enabled", "true");
-        propertyMap.put("aws-parameter-store-source.multi-region.ssm-client.regions", "us-east-1,us-east-2");
-        propertyMap.put("aws-parameter-store-source.ssm-client.max-error-retry", MAX_RETRIES);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ENABLED, "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
+                        "us-east-1,us-east-2");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY, MAX_RETRIES);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
@@ -173,8 +174,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testWhenMaxRetryErrorIsSpecified()
     {
-        propertyMap.put("aws-parameter-store-property-source.enabled", "true");
-        propertyMap.put("aws-parameter-store-source.ssm-client.max-error-retry", SPECIFIC_MAX_ERROR_RETRY);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ENABLED, "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY, SPECIFIC_MAX_ERROR_RETRY);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
@@ -192,9 +193,10 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testWhenMaxRetryErrorIsSpecifiedAndMultiRegionIsEnabled()
     {
-        propertyMap.put("aws-parameter-store-property-source.enabled", "true");
-        propertyMap.put("aws-parameter-store-source.ssm-client.max-error-retry", SPECIFIC_MAX_ERROR_RETRY);
-        propertyMap.put("aws-parameter-store-source.multi-region.ssm-client.regions", "us-east-1,us-east-2");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ENABLED, "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY, SPECIFIC_MAX_ERROR_RETRY);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
+                        "us-east-1,us-east-2");
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);

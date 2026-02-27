@@ -1,7 +1,7 @@
 package com.coveo.configuration.parameterstore.strategy;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertySource;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
@@ -69,8 +70,9 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
         when(awsRegionProviderChain.getRegion()).thenReturn(PROVIDER_CHAIN_REGION);
 
-        propertyMap.put("aws-parameter-store-source.ssm-client.endpoint-configuration.endpoint", "customEndpoint");
-        propertyMap.put("aws-parameter-store-source.ssm-client.endpoint-configuration.signing-region",
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_CUSTOM_ENDPOINT,
+                        "customEndpoint");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.SSM_CLIENT_SIGNING_REGION,
                         PROVIDER_CHAIN_REGION.toString());
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
@@ -80,15 +82,13 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
 
     private void assertPropertySourceAdded()
     {
-        // The strategy adds property sources via addFirst on the real MutablePropertySources,
-        // so we verify by checking the property sources contain the expected entry
         boolean found = false;
-        for (org.springframework.core.env.PropertySource<?> ps : propertySources) {
-            if (ps instanceof ParameterStorePropertySource) {
+        for (PropertySource<?> propertySource : propertySources) {
+            if (propertySource instanceof ParameterStorePropertySource) {
                 found = true;
                 break;
             }
         }
-        assert found : "Expected a ParameterStorePropertySource to be added";
+        assertThat(found).isTrue();
     }
 }

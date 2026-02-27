@@ -48,7 +48,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     public void setUp()
     {
         propertyMap = new HashMap<>();
-        propertyMap.put("aws-parameter-store-source.multi-region.ssm-client.regions",
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                         String.join(",", SIGNING_REGIONS));
         propertySources = new MutablePropertySources();
         propertySources.addFirst(new MapPropertySource("test", propertyMap));
@@ -79,7 +79,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     {
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
         when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
-        propertyMap.put("aws-parameter-store-property-source.halt-boot", "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT, "true");
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
@@ -97,8 +97,8 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     {
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
         when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
-        propertyMap.put("aws-parameter-store-property-source.halt-boot", "true");
-        propertyMap.put("aws-parameter-store-source.multi-region.ssm-client.regions",
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT, "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                         String.join(",", SINGLE_SIGNING_REGIONS));
 
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
@@ -111,7 +111,17 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     @Test
     public void testShouldThrowWhenRegionsIsEmpty()
     {
-        propertyMap.put("aws-parameter-store-source.multi-region.ssm-client.regions", "");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS, "");
+
+        assertThrows(IllegalArgumentException.class,
+                     () -> strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
+                                                                           ssmClientBuilderMock));
+    }
+
+    @Test
+    public void testShouldThrowWhenRegionsIsNotSet()
+    {
+        propertyMap.remove(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS);
 
         assertThrows(IllegalArgumentException.class,
                      () -> strategy.configureParameterStorePropertySources(configurableEnvironmentMock,
@@ -121,9 +131,9 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     private List<ParameterStorePropertySource> getAddedParameterStorePropertySources()
     {
         List<ParameterStorePropertySource> result = new ArrayList<>();
-        for (PropertySource<?> ps : propertySources) {
-            if (ps instanceof ParameterStorePropertySource) {
-                result.add((ParameterStorePropertySource) ps);
+        for (PropertySource<?> propertySource : propertySources) {
+            if (propertySource instanceof ParameterStorePropertySource) {
+                result.add((ParameterStorePropertySource) propertySource);
             }
         }
         return result;
