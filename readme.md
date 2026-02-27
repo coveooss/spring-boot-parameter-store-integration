@@ -14,9 +14,9 @@ The library uses:
 
 Those can be overridden in your `pom.xml`.  
 
-The library was tested and worked properly with:
+The library is tested and supported with:
 
-- [Spring Boot](https://spring.io/projects/spring-boot) 1.4.x, 1.5.x, 2.x and 3.x
+- [Spring Boot](https://spring.io/projects/spring-boot) 2.x and 3.x (Spring Boot 1.x is no longer supported as of version 2.0.0 of this library)
 - [AWS Java SDK](https://aws.amazon.com/sdk-for-java/) >= 2.x
 
 ## Unleashing the Magic
@@ -86,7 +86,7 @@ If you want to halt the boot when a property prefixed with `/` isn't found in th
 
 TL;DR: Define the enabling properties in the bootstrap properties (`bootstrap.yml`, `bootstrap.properties`, [etc.](https://cloud.spring.io/spring-cloud-static/spring-cloud.html#_the_bootstrap_application_context))(see [Unleashing the Magic](#there-are-3-ways-to-enable-this-lib-after-importing-it-in-your-pomxml-pick-yours)).
 
-Spring Cloud has a second application context named bootstrap that gets initialized before Spring Boot's normal application context. Since this library uses an EnvironmentPostPrecessor to add the Parameter Store PropertySource, it will get triggered twice if you enabled in the bootstrap properties. This allows it to work in both context and to be on top of the property sources in both. For this reason, if you need to fetch Parameter Store properties in the bootstrap context, you should use the bootstrap properties to enable the library. Otherwise you can enable it in the normal Spring Boot context and it will work fine.
+Spring Cloud has a second application context named bootstrap that gets initialized before Spring Boot's normal application context. Since this library uses an EnvironmentPostProcessor to add the Parameter Store PropertySource, it will get triggered twice if you enabled in the bootstrap properties. This allows it to work in both context and to be on top of the property sources in both. For this reason, if you need to fetch Parameter Store properties in the bootstrap context, you should use the bootstrap properties to enable the library. Otherwise you can enable it in the normal Spring Boot context and it will work fine.
 
 ## Multi-region support
 - Set `aws-parameter-store-source.multi-region.ssm-client.regions` to a comma-separated string of regions from which you want to retrieve parameters. Example: `us-east-1,us-east-2`. Doing so will add a `ParameterStorePropertySource` object for each region specified, and this object will list the parameters associated with this region. The integration searches for parameters in regions following the order specified, and stops at the first occurrence. You should therefore put the regions **in order of precedence**.  
