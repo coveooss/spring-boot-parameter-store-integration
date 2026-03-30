@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -135,13 +136,10 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
 
     private List<ParameterStorePropertySource> getAddedParameterStorePropertySources()
     {
-        List<ParameterStorePropertySource> result = new ArrayList<>();
-        for (PropertySource<?> propertySource : propertySources) {
-            if (propertySource instanceof ParameterStorePropertySource) {
-                result.add((ParameterStorePropertySource) propertySource);
-            }
-        }
-        return result;
+        return propertySources.stream()
+                              .filter(ParameterStorePropertySource.class::isInstance)
+                              .map(ParameterStorePropertySource.class::cast)
+                              .collect(Collectors.toList());
     }
 
     private void verifyParameterStorePropertySource(ParameterStorePropertySource actual,

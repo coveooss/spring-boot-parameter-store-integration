@@ -82,13 +82,6 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
 
     private void assertPropertySourceAdded()
     {
-        boolean found = false;
-        for (PropertySource<?> propertySource : propertySources) {
-            if (propertySource instanceof ParameterStorePropertySource) {
-                found = true;
-                break;
-            }
-        }
-        assertThat(found).isTrue();
+        assertThat(propertySources.stream().anyMatch(ParameterStorePropertySource.class::isInstance)).isTrue();
     }
 }
