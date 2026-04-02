@@ -124,6 +124,9 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: GPG_PASSPHRASE
 
+      - name: Set release version
+        run: mvn -B versions:set -DnewVersion=${{ needs.validate.outputs.version }} -DgenerateBackupPoms=false
+
       - name: Publish package
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
