@@ -1,6 +1,7 @@
 package com.coveo.configuration.parameterstore;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -23,17 +24,19 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application)
     {
-        if (isParameterStorePropertySourceEnabled(environment)) {
-            getParameterStorePropertySourceConfigurationStrategy(environment).configureParameterStorePropertySources(environment,
-                                                                                                                     preconfigureSSMClientBuilder(environment));
+        Binder binder = Binder.get(environment);
+        if (isParameterStorePropertySourceEnabled(environment, binder)) {
+            getParameterStorePropertySourceConfigurationStrategy(binder).configureParameterStorePropertySources(environment.getPropertySources(),
+                                                                                                                binder,
+                                                                                                                preconfigureSSMClientBuilder(binder));
         }
     }
 
-    private SsmClientBuilder preconfigureSSMClientBuilder(ConfigurableEnvironment environment)
+    private SsmClientBuilder preconfigureSSMClientBuilder(Binder binder)
     {
-        Integer maxRetries = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY,
-                                                     Integer.class,
-                                                     SdkDefaultRetrySetting.maxAttempts(RetryMode.STANDARD));
+        Integer maxRetries = binder.bind(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY,
+                                         Integer.class)
+                                   .orElse(SdkDefaultRetrySetting.maxAttempts(RetryMode.STANDARD));
         ClientOverrideConfiguration clientOverrideConfiguration = ClientOverrideConfiguration.builder()
                                                                                              .retryStrategy(configurator -> configurator.maxAttempts(maxRetries
                                                                                                      + 1))
@@ -41,27 +44,29 @@ public class ParameterStorePropertySourceEnvironmentPostProcessor implements Env
         return SsmClient.builder().overrideConfiguration(clientOverrideConfiguration);
     }
 
-    private ParameterStorePropertySourceConfigurationStrategy getParameterStorePropertySourceConfigurationStrategy(ConfigurableEnvironment environment)
+    private ParameterStorePropertySourceConfigurationStrategy getParameterStorePropertySourceConfigurationStrategy(Binder binder)
     {
-        StrategyType type = isMultiRegionEnabled(environment) ? StrategyType.MULTI_REGION : StrategyType.DEFAULT;
+        StrategyType type = isMultiRegionEnabled(binder) ? StrategyType.MULTI_REGION : StrategyType.DEFAULT;
         return strategyFactory.getStrategy(type);
     }
 
-    private boolean isParameterStorePropertySourceEnabled(ConfigurableEnvironment environment)
+    private boolean isParameterStorePropertySourceEnabled(ConfigurableEnvironment environment, Binder binder)
     {
-        String[] userDefinedEnabledProfiles = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES,
-                                                                      String[].class);
-        return environment.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
-                                       Boolean.class,
-                                       Boolean.FALSE)
+        String[] userDefinedEnabledProfiles = binder.bind(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES,
+                                                          String[].class)
+                                                    .orElse(null);
+        return binder.bind(ParameterStorePropertySourceConfigurationProperties.ENABLED, Boolean.class)
+                     .orElse(Boolean.FALSE)
                 || environment.acceptsProfiles(Profiles.of(ParameterStorePropertySourceConfigurationProperties.ENABLED_PROFILE))
                 || (!ObjectUtils.isEmpty(userDefinedEnabledProfiles)
                         && environment.acceptsProfiles(Profiles.of(userDefinedEnabledProfiles)));
     }
 
-    private boolean isMultiRegionEnabled(ConfigurableEnvironment environment)
+    private boolean isMultiRegionEnabled(Binder binder)
     {
-        return environment.containsProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS);
+        return binder.bind(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
+                           String[].class)
+                     .isBound();
     }
 
     @Override
