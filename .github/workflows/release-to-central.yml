@@ -19,7 +19,7 @@ on:
         type: boolean
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ inputs.version }}
@@ -41,9 +41,9 @@ jobs:
 
           VERSION="${{ inputs.version }}"
 
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Invalid version: $VERSION"
-            echo "Expected something like 1.4.0 or 1.4.0-rc.1"
+            echo "Expected semver format: X.Y.Z (e.g. 1.4.0)"
             exit 1
           fi
 
@@ -55,25 +55,6 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
-        with:
-          java-version: '17'
-          distribution: temurin
-          cache: maven
-
-      - name: Validate Maven project version
-        shell: bash
-        run: |
-          set -euo pipefail
-          EXPECTED_VERSION="${{ inputs.version }}"
-          ACTUAL_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --batch-mode --no-transfer-progress)
-          if [[ "$ACTUAL_VERSION" != "$EXPECTED_VERSION" ]]; then
-            echo "::error::Maven project version ($ACTUAL_VERSION) does not match the input version ($EXPECTED_VERSION)"
-            exit 1
-          fi
-          echo "Maven project version matches input: $ACTUAL_VERSION"
 
       - name: Validate git ref
         shell: bash
@@ -107,7 +88,6 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ inputs.ref }}
-          fetch-depth: 0
 
       - name: Set up Java
         uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
@@ -131,7 +111,6 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ inputs.ref }}
-          fetch-depth: 0
 
       - name: Set up Java for publishing
         uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
@@ -163,7 +142,6 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ inputs.ref }}
-          fetch-depth: 0
 
       - name: Configure git identity
         run: |
