@@ -1,6 +1,6 @@
 [![CI](https://github.com/coveooss/spring-boot-parameter-store-integration/actions/workflows/ci.yml/badge.svg)](https://github.com/coveooss/spring-boot-parameter-store-integration/actions/workflows/ci.yml)
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/coveo/spring-boot-parameter-store-integration/blob/master/LICENSE)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.coveo/spring-boot-parameter-store-integration/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.coveo/spring-boot-parameter-store-integration)
+[![Maven Central](https://img.shields.io/maven-central/v/com.coveo/spring-boot-parameter-store-integration.svg)](https://search.maven.org/artifact/com.coveo/spring-boot-parameter-store-integration)
 
 # Spring Boot Parameter Store Integration
 
