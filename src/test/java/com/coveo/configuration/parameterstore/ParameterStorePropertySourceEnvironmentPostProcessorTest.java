@@ -3,6 +3,9 @@ package com.coveo.configuration.parameterstore;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +14,10 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
 
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategy;
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategyFactory;
@@ -24,7 +30,6 @@ import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 public class ParameterStorePropertySourceEnvironmentPostProcessorTest
 {
     private static final int SPECIFIC_MAX_ERROR_RETRY = 10;
-    private static final String[] EMPTY_CUSTOM_PROFILES = new String[] {};
     private static final String[] CUSTOM_PROFILES = new String[] { "open", "source", "this" };
     private static final int MAX_RETRIES = 3;
 
@@ -46,6 +51,9 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
 
     private ParameterStorePropertySourceEnvironmentPostProcessor parameterStorePropertySourceEnvironmentPostProcessor = new ParameterStorePropertySourceEnvironmentPostProcessor();
 
+    private Map<String, Object> propertyMap;
+    private MutablePropertySources propertySources;
+
     @BeforeEach
     public void setUp()
     {
@@ -53,12 +61,10 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         when(strategyFactoryMock.getStrategy(StrategyType.MULTI_REGION)).thenReturn(multiRegionPostProcessStrategyMock);
         ParameterStorePropertySourceEnvironmentPostProcessor.strategyFactory = strategyFactoryMock;
 
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.FALSE);
-        when(configurableEnvironmentMock.getProperty(eq(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY),
-                                                     eq(Integer.class),
-                                                     any())).thenReturn(MAX_RETRIES);
+        propertyMap = new HashMap<>();
+        propertySources = new MutablePropertySources();
+        propertySources.addFirst(new MapPropertySource("test", propertyMap));
+        when(configurableEnvironmentMock.getPropertySources()).thenReturn(propertySources);
     }
 
     @Test
@@ -75,14 +81,14 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testParameterStoreIsEnabledWithPropertySetToTrue()
     {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ENABLED, "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY, MAX_RETRIES);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(propertySources),
+                                                                                      any(Binder.class),
                                                                                       ssmClientBuilderCaptor.capture());
         ssmClientBuilderCaptor.getValue()
                               .overrideConfiguration()
@@ -102,7 +108,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(propertySources),
+                                                                                      any(Binder.class),
                                                                                       any(SsmClientBuilder.class));
         verifyNoInteractions(multiRegionPostProcessStrategyMock);
     }
@@ -110,14 +117,14 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testParameterStoreIsEnabledWithCustomProfiles()
     {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES,
-                                                     String[].class)).thenReturn(CUSTOM_PROFILES);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES, "open,source,this");
         when(configurableEnvironmentMock.acceptsProfiles(Profiles.of(CUSTOM_PROFILES))).thenReturn(true);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(propertySources),
+                                                                                      any(Binder.class),
                                                                                       any(SsmClientBuilder.class));
         verifyNoInteractions(multiRegionPostProcessStrategyMock);
     }
@@ -125,13 +132,9 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testParameterStoreIsNotEnabledWithCustomProfilesEmpty()
     {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES,
-                                                     String[].class)).thenReturn(EMPTY_CUSTOM_PROFILES);
-
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(configurableEnvironmentMock, never()).acceptsProfiles(EMPTY_CUSTOM_PROFILES);
         verifyNoInteractions(defaultPostProcessStrategyMock);
         verifyNoInteractions(multiRegionPostProcessStrategyMock);
     }
@@ -139,9 +142,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testParameterStoreIsNotEnabledWithCustomProfilesButNoneOfTheProfilesActive()
     {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES,
-                                                     String[].class)).thenReturn(CUSTOM_PROFILES);
-        when(configurableEnvironmentMock.acceptsProfiles(CUSTOM_PROFILES)).thenReturn(false);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES, "open,source,this");
+        when(configurableEnvironmentMock.acceptsProfiles(Profiles.of(CUSTOM_PROFILES))).thenReturn(false);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
@@ -153,16 +155,17 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testWhenMultiRegionIsEnabled()
     {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS)).thenReturn(Boolean.TRUE);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ENABLED, "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
+                        "us-east-1,us-east-2");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY, MAX_RETRIES);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
         verify(multiRegionPostProcessStrategyMock,
-               times(1)).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+               times(1)).configureParameterStorePropertySources(eq(propertySources),
+                                                                any(Binder.class),
                                                                 ssmClientBuilderCaptor.capture());
         ssmClientBuilderCaptor.getValue()
                               .overrideConfiguration()
@@ -177,17 +180,14 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testWhenMaxRetryErrorIsSpecified()
     {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(eq(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY),
-                                                     eq(Integer.class),
-                                                     any())).thenReturn(SPECIFIC_MAX_ERROR_RETRY);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ENABLED, "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY, SPECIFIC_MAX_ERROR_RETRY);
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
-        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+        verify(defaultPostProcessStrategyMock).configureParameterStorePropertySources(eq(propertySources),
+                                                                                      any(Binder.class),
                                                                                       ssmClientBuilderCaptor.capture());
         ssmClientBuilderCaptor.getValue()
                               .overrideConfiguration()
@@ -200,19 +200,17 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Test
     public void testWhenMaxRetryErrorIsSpecifiedAndMultiRegionIsEnabled()
     {
-        when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
-                                                     Boolean.class,
-                                                     Boolean.FALSE)).thenReturn(Boolean.TRUE);
-        when(configurableEnvironmentMock.getProperty(eq(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY),
-                                                     eq(Integer.class),
-                                                     any())).thenReturn(SPECIFIC_MAX_ERROR_RETRY);
-        when(configurableEnvironmentMock.containsProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS)).thenReturn(Boolean.TRUE);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.ENABLED, "true");
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY, SPECIFIC_MAX_ERROR_RETRY);
+        propertyMap.put(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
+                        "us-east-1,us-east-2");
 
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
 
         verify(multiRegionPostProcessStrategyMock,
-               times(1)).configureParameterStorePropertySources(eq(configurableEnvironmentMock),
+               times(1)).configureParameterStorePropertySources(eq(propertySources),
+                                                                any(Binder.class),
                                                                 ssmClientBuilderCaptor.capture());
         ssmClientBuilderCaptor.getValue()
                               .overrideConfiguration()

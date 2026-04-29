@@ -3,9 +3,9 @@ package com.coveo.configuration.parameterstore.strategy;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.util.CollectionUtils;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
@@ -21,14 +21,14 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
     private static final String PARAMETER_STORE_PROPERTY_SOURCE_NAME = "MultiRegionAWSParameterStorePropertySource_";
 
     @Override
-    public void configureParameterStorePropertySources(ConfigurableEnvironment environment,
+    public void configureParameterStorePropertySources(MutablePropertySources propertySources,
+                                                       Binder binder,
                                                        SsmClientBuilder ssmClientBuilder)
     {
-        boolean haltBoot = environment.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
-                                                   Boolean.class,
-                                                   Boolean.FALSE);
+        boolean haltBoot = binder.bind(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT, Boolean.class)
+                                 .orElse(Boolean.FALSE);
 
-        List<String> regions = getRegions(environment);
+        List<String> regions = getRegions(binder);
 
         // To keep the order of precedence, we have to iterate from the last region to the first one.
         // If we want the first region specified to be the first property source, we have to add it last.
@@ -38,15 +38,13 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
         String lastRegion = regions.get(0);
 
         // We only want to halt boot (if true) for the last region
-        environment.getPropertySources()
-                   .addFirst(buildParameterStorePropertySource(ssmClientBuilder, lastRegion, haltBoot));
+        propertySources.addFirst(buildParameterStorePropertySource(ssmClientBuilder, lastRegion, haltBoot));
 
         regions.stream()
                .skip(1)
-               .forEach(region -> environment.getPropertySources()
-                                             .addFirst(buildParameterStorePropertySource(ssmClientBuilder,
-                                                                                         region,
-                                                                                         false)));
+               .forEach(region -> propertySources.addFirst(buildParameterStorePropertySource(ssmClientBuilder,
+                                                                                             region,
+                                                                                             false)));
     }
 
     private ParameterStorePropertySource buildParameterStorePropertySource(SsmClientBuilder ssmClientBuilder,
@@ -62,11 +60,11 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
         return ssmClientBuilder.region(Region.of(region)).build();
     }
 
-    private List<String> getRegions(ConfigurableEnvironment environment)
+    private List<String> getRegions(Binder binder)
     {
-        List<String> regions = Arrays.asList(Optional.ofNullable(environment.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
-                                                                                         String[].class))
-                                                     .orElseGet(() -> new String[0]));
+        List<String> regions = Arrays.asList(binder.bind(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
+                                                         String[].class)
+                                                   .orElseGet(() -> new String[0]));
 
         if (CollectionUtils.isEmpty(regions)) {
             throw new IllegalArgumentException(String.format("To enable multi region support, the property '%s' must not be empty.",
