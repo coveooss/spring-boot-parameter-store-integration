@@ -32,8 +32,8 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategy
 
         // To keep the order of precedence, we have to iterate from the last region to the first one.
         // If we want the first region specified to be the first property source, we have to add it last.
-        // We cannot use addLast since it adds the property source with lowest precedence and we want the
-        // Parameter store property sources to have highest precedence on the other property sources
+        // We cannot use addLast since it adds the property source with the lowest precedence, and we want the
+        // Parameter store property sources to have the highest precedence on the other property sources
         Collections.reverse(regions);
         String lastRegion = regions.get(0);
 
