@@ -1,7 +1,7 @@
 package com.coveo.configuration.parameterstore.strategy;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -22,6 +22,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
+
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 

@@ -24,6 +24,7 @@ import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 public class DefaultParameterStorePropertySourceConfigurationStrategyTest
 {
     private static final Region PROVIDER_CHAIN_REGION = Region.US_EAST_1;
+
     @Mock
     private ConfigurableEnvironment configurableEnvironmentMock;
     @Mock

@@ -1,7 +1,7 @@
 package com.coveo.configuration.parameterstore;
 
+import org.springframework.boot.EnvironmentPostProcessor;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Profiles;
@@ -10,6 +10,7 @@ import org.springframework.util.ObjectUtils;
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategy;
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategyFactory;
 import com.coveo.configuration.parameterstore.strategy.StrategyType;
+
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.internal.retry.SdkDefaultRetrySetting;
 import software.amazon.awssdk.core.retry.RetryMode;

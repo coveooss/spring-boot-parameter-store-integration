@@ -2,7 +2,7 @@ package com.coveo.configuration.parameterstore;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,17 +13,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.coveo.configuration.parameterstore.exception.ParameterStoreError;
 import com.coveo.configuration.parameterstore.exception.ParameterStoreParameterNotFoundError;
+
 import software.amazon.awssdk.awscore.AwsResponseMetadata;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.*;
+import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
+import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
+import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.model.SsmResponseMetadata;
 
 @ExtendWith(MockitoExtension.class)
 public class ParameterStoreSourceTest
 {
     private static final String VALID_PROPERTY_NAME = "awesomeproperty";
     private static final String VALID_PROPERTY_VALUE = "awesomepropertyVALUE";
-
     private static final String INVALID_PROPERTY_NAME = "notawesomeproperty";
 
     @Mock

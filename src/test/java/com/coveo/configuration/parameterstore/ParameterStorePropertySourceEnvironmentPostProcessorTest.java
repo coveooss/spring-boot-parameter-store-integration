@@ -1,7 +1,12 @@
 package com.coveo.configuration.parameterstore;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,11 +17,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Profiles;
 
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategy;
 import com.coveo.configuration.parameterstore.strategy.ParameterStorePropertySourceConfigurationStrategyFactory;
 import com.coveo.configuration.parameterstore.strategy.StrategyType;
-import org.springframework.core.env.Profiles;
+
 import software.amazon.awssdk.retries.api.RetryStrategy;
 import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 
@@ -44,7 +50,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     @Captor
     private ArgumentCaptor<SsmClientBuilder> ssmClientBuilderCaptor;
 
-    private ParameterStorePropertySourceEnvironmentPostProcessor parameterStorePropertySourceEnvironmentPostProcessor = new ParameterStorePropertySourceEnvironmentPostProcessor();
+    private ParameterStorePropertySourceEnvironmentPostProcessor parameterStorePropertySourceEnvironmentPostProcessor;
 
     @BeforeEach
     public void setUp()
@@ -59,6 +65,8 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
         when(configurableEnvironmentMock.getProperty(eq(ParameterStorePropertySourceConfigurationProperties.MAX_ERROR_RETRY),
                                                      eq(Integer.class),
                                                      any())).thenReturn(MAX_RETRIES);
+
+        parameterStorePropertySourceEnvironmentPostProcessor = new ParameterStorePropertySourceEnvironmentPostProcessor();
     }
 
     @Test

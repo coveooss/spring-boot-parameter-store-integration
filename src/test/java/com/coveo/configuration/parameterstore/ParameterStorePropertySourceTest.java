@@ -1,7 +1,10 @@
 package com.coveo.configuration.parameterstore;
 
-import static com.google.common.truth.Truth.*;
-import static org.mockito.Mockito.*;
+import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
