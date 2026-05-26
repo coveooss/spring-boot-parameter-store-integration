@@ -1,17 +1,18 @@
 package com.coveo.configuration.parameterstore.strategy;
 
+import java.net.URI;
+import java.util.Objects;
+
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import com.coveo.configuration.parameterstore.ParameterStorePropertySource;
 import com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties;
 import com.coveo.configuration.parameterstore.ParameterStoreSource;
+
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.regions.providers.AwsRegionProviderChain;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.SsmClientBuilder;
-
-import java.net.URI;
-import java.util.Objects;
 
 public class DefaultParameterStorePropertySourceConfigurationStrategy
         implements ParameterStorePropertySourceConfigurationStrategy

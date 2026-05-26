@@ -1,8 +1,8 @@
 package com.coveo.configuration.parameterstore.strategy;
 
-import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
-
 import java.util.EnumMap;
+
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 public class ParameterStorePropertySourceConfigurationStrategyFactory
 {
