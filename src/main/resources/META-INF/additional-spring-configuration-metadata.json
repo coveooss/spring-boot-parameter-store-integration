@@ -1,0 +1,49 @@
+{
+  "properties": [
+    {
+      "name": "awsParameterStorePropertySource.enabled",
+      "sourceType": "com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties",
+      "description": "Explicitly disables the Kubernetes external secret property source.",
+      "type": "java.lang.Boolean",
+      "defaultValue": false
+    },
+    {
+      "name": "awsParameterStorePropertySource.enabledProfiles",
+      "sourceType": "com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties",
+      "description": "Comma-separated list of Spring profiles for which the property source should be enabled. If not specified, the property source will be enabled for all profiles.",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "awsParameterStorePropertySource.haltBoot",
+      "sourceType": "com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties",
+      "description": "Whether to halt the application boot if the property source fails to load. If false, the application will continue to boot even if the property source fails to load.",
+      "type": "java.lang.Boolean",
+      "defaultValue": false
+    },
+    {
+      "name": "awsParameterStoreSource.ssmClient.endpointConfiguration.endpoint",
+      "sourceType": "com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties",
+      "description": "The endpoint to which the SSM client should connect. If not specified, the client will connect to the default AWS endpoint for the configured region.",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion",
+      "sourceType": "com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties",
+      "description": "The AWS region to use for signing requests to the SSM endpoint. If not specified, the client will use the default region configured for the application.",
+      "type": "java.lang.String",
+      "defaultValue": "us-east-1"
+    },
+    {
+      "name": "awsParameterStoreSource.multiRegion.ssmClient.regions",
+      "sourceType": "com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties",
+      "description": "Comma-separated list of AWS regions to use for multi-region support. If specified, the property source will attempt to load properties from SSM in each of the specified regions.",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "awsParameterStoreSource.ssmClient.maxErrorRetry",
+      "sourceType": "com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties",
+      "description": "The maximum number of retry attempts for failed requests to the SSM endpoint. If not specified, the client will use the default retry policy.",
+      "type": "java.lang.Integer"
+    }
+  ]
+}
