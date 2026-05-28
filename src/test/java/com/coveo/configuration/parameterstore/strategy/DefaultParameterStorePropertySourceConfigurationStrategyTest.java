@@ -21,7 +21,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 
 @ExtendWith(MockitoExtension.class)
-public class DefaultParameterStorePropertySourceConfigurationStrategyTest
+class DefaultParameterStorePropertySourceConfigurationStrategyTest
 {
     private static final Region PROVIDER_CHAIN_REGION = Region.US_EAST_1;
 
@@ -39,7 +39,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     private DefaultParameterStorePropertySourceConfigurationStrategy strategy;
 
     @BeforeEach
-    public void setUp()
+    void setUp()
     {
         when(ssmClientBuilderMock.build()).thenReturn(ssmClientMock);
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
@@ -51,7 +51,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     }
 
     @Test
-    public void testShouldAddPropertySource()
+    void testShouldAddPropertySource()
     {
         strategy.configureParameterStorePropertySources(configurableEnvironmentMock, ssmClientBuilderMock);
 
@@ -59,7 +59,7 @@ public class DefaultParameterStorePropertySourceConfigurationStrategyTest
     }
 
     @Test
-    public void testWhenCustomEndpointShouldAddPropertySource()
+    void testWhenCustomEndpointShouldAddPropertySource()
     {
         when(ssmClientBuilderMock.endpointOverride(any())).thenReturn(ssmClientBuilderMock);
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);

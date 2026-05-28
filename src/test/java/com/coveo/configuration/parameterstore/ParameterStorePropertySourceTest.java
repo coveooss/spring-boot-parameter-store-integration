@@ -13,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class ParameterStorePropertySourceTest
+class ParameterStorePropertySourceTest
 {
     private static final String VALID_PROPERTY_NAME = "/validproperty";
     private static final String VALID_VALUE = "myvalidvalue";
@@ -24,13 +24,13 @@ public class ParameterStorePropertySourceTest
     private ParameterStorePropertySource parameterStorePropertySource;
 
     @BeforeEach
-    public void setUp()
+    void setUp()
     {
         parameterStorePropertySource = new ParameterStorePropertySource("someuselessname", parameterStoreSourceMock);
     }
 
     @Test
-    public void testGetPropertyReturnsNullWithoutPingingParameterStoreIfPrefixIsNotPresent()
+    void testGetPropertyReturnsNullWithoutPingingParameterStoreIfPrefixIsNotPresent()
     {
         Object value = parameterStorePropertySource.getProperty("somepropswithoutslashbefore");
 
@@ -39,7 +39,7 @@ public class ParameterStorePropertySourceTest
     }
 
     @Test
-    public void testGetProperty()
+    void testGetProperty()
     {
         when(parameterStoreSourceMock.getProperty(VALID_PROPERTY_NAME)).thenReturn(VALID_VALUE);
 

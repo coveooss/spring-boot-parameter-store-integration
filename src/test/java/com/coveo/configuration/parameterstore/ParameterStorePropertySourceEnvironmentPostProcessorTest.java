@@ -27,7 +27,7 @@ import software.amazon.awssdk.retries.api.RetryStrategy;
 import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 
 @ExtendWith(MockitoExtension.class)
-public class ParameterStorePropertySourceEnvironmentPostProcessorTest
+class ParameterStorePropertySourceEnvironmentPostProcessorTest
 {
     private static final int SPECIFIC_MAX_ERROR_RETRY = 10;
     private static final String[] EMPTY_CUSTOM_PROFILES = new String[] {};
@@ -53,7 +53,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     private ParameterStorePropertySourceEnvironmentPostProcessor parameterStorePropertySourceEnvironmentPostProcessor;
 
     @BeforeEach
-    public void setUp()
+    void setUp()
     {
         when(strategyFactoryMock.getStrategy(StrategyType.DEFAULT)).thenReturn(defaultPostProcessStrategyMock);
         when(strategyFactoryMock.getStrategy(StrategyType.MULTI_REGION)).thenReturn(multiRegionPostProcessStrategyMock);
@@ -70,7 +70,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testParameterStoreIsDisabledByDefault()
+    void testParameterStoreIsDisabledByDefault()
     {
         parameterStorePropertySourceEnvironmentPostProcessor.postProcessEnvironment(configurableEnvironmentMock,
                                                                                     applicationMock);
@@ -81,7 +81,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testParameterStoreIsEnabledWithPropertySetToTrue()
+    void testParameterStoreIsEnabledWithPropertySetToTrue()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
                                                      Boolean.class,
@@ -103,7 +103,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testParameterStoreIsEnabledWithProfile()
+    void testParameterStoreIsEnabledWithProfile()
     {
         when(configurableEnvironmentMock.acceptsProfiles(Profiles.of(ParameterStorePropertySourceConfigurationProperties.ENABLED_PROFILE))).thenReturn(true);
 
@@ -116,7 +116,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testParameterStoreIsEnabledWithCustomProfiles()
+    void testParameterStoreIsEnabledWithCustomProfiles()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES,
                                                      String[].class)).thenReturn(CUSTOM_PROFILES);
@@ -131,7 +131,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testParameterStoreIsNotEnabledWithCustomProfilesEmpty()
+    void testParameterStoreIsNotEnabledWithCustomProfilesEmpty()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES,
                                                      String[].class)).thenReturn(EMPTY_CUSTOM_PROFILES);
@@ -145,7 +145,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testParameterStoreIsNotEnabledWithCustomProfilesButNoneOfTheProfilesActive()
+    void testParameterStoreIsNotEnabledWithCustomProfilesButNoneOfTheProfilesActive()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ACCEPTED_PROFILES,
                                                      String[].class)).thenReturn(CUSTOM_PROFILES);
@@ -159,7 +159,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testWhenMultiRegionIsEnabled()
+    void testWhenMultiRegionIsEnabled()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
                                                      Boolean.class,
@@ -183,7 +183,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testWhenMaxRetryErrorIsSpecified()
+    void testWhenMaxRetryErrorIsSpecified()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
                                                      Boolean.class,
@@ -206,7 +206,7 @@ public class ParameterStorePropertySourceEnvironmentPostProcessorTest
     }
 
     @Test
-    public void testWhenMaxRetryErrorIsSpecifiedAndMultiRegionIsEnabled()
+    void testWhenMaxRetryErrorIsSpecifiedAndMultiRegionIsEnabled()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.ENABLED,
                                                      Boolean.class,

@@ -27,7 +27,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 
 @ExtendWith(MockitoExtension.class)
-public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
+class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
 {
     private static final String[] SIGNING_REGIONS = { "ownRegion", "mainRegion", "defaultRegion" };
     private static final String[] SINGLE_SIGNING_REGIONS = { "ownRegion" };
@@ -48,7 +48,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     private MultiRegionParameterStorePropertySourceConfigurationStrategy strategy;
 
     @BeforeEach
-    public void setUp()
+    void setUp()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.HALT_BOOT,
                                                      Boolean.class,
@@ -60,7 +60,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     }
 
     @Test
-    public void testShouldAddPropertySourceForEverySigningRegionsInOrderOfPrecedence()
+    void testShouldAddPropertySourceForEverySigningRegionsInOrderOfPrecedence()
     {
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
@@ -77,7 +77,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     }
 
     @Test
-    public void testHaltBootIsTrueThenOnlyLastRegionShouldHaltBoot()
+    void testHaltBootIsTrueThenOnlyLastRegionShouldHaltBoot()
     {
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
@@ -97,7 +97,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     }
 
     @Test
-    public void testWithSingleRegion()
+    void testWithSingleRegion()
     {
         when(configurableEnvironmentMock.getPropertySources()).thenReturn(mutablePropertySourcesMock);
         when(ssmClientBuilderMock.region(any())).thenReturn(ssmClientBuilderMock);
@@ -117,7 +117,7 @@ public class MultiRegionParameterStorePropertySourceConfigurationStrategyTest
     }
 
     @Test
-    public void testShouldThrowWhenRegionsIsEmpty()
+    void testShouldThrowWhenRegionsIsEmpty()
     {
         when(configurableEnvironmentMock.getProperty(ParameterStorePropertySourceConfigurationProperties.MULTI_REGION_SSM_CLIENT_REGIONS,
                                                      String[].class)).thenReturn(EMPTY_REGIONS);

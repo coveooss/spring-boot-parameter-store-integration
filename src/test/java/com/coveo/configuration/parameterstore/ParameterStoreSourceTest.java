@@ -24,7 +24,7 @@ import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.awssdk.services.ssm.model.SsmResponseMetadata;
 
 @ExtendWith(MockitoExtension.class)
-public class ParameterStoreSourceTest
+class ParameterStoreSourceTest
 {
     private static final String VALID_PROPERTY_NAME = "awesomeproperty";
     private static final String VALID_PROPERTY_VALUE = "awesomepropertyVALUE";
@@ -40,13 +40,13 @@ public class ParameterStoreSourceTest
     private ParameterStoreSource parameterStoreSource;
 
     @BeforeEach
-    public void setUp()
+    void setUp()
     {
         parameterStoreSource = new ParameterStoreSource(ssmClientMock, false);
     }
 
     @Test
-    public void testGetProperty()
+    void testGetProperty()
     {
         when(sdkHttpMetadataMock.statusCode()).thenReturn(200);
         when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenReturn(getGetParameterResponse().toBuilder()
@@ -61,7 +61,7 @@ public class ParameterStoreSourceTest
     }
 
     @Test
-    public void testGetPropertyWhenNotFoundReturnsNull()
+    void testGetPropertyWhenNotFoundReturnsNull()
     {
         when(ssmClientMock.getParameter(getParameterRequest(INVALID_PROPERTY_NAME))).thenThrow(ParameterNotFoundException.builder()
                                                                                                                          .build());
@@ -72,7 +72,7 @@ public class ParameterStoreSourceTest
     }
 
     @Test
-    public void shouldThrowOnUnexpectedExceptionAccessingParameterStore()
+    void shouldThrowOnUnexpectedExceptionAccessingParameterStore()
     {
         when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenThrow(new RuntimeException());
 
@@ -80,7 +80,7 @@ public class ParameterStoreSourceTest
     }
 
     @Test
-    public void shouldThrowOnGetPropertyWhenNotFoundAndHaltBootIsTrue()
+    void shouldThrowOnGetPropertyWhenNotFoundAndHaltBootIsTrue()
     {
         when(ssmClientMock.getParameter(getParameterRequest(INVALID_PROPERTY_NAME))).thenThrow(ParameterNotFoundException.builder()
                                                                                                                          .build());
@@ -91,7 +91,7 @@ public class ParameterStoreSourceTest
     }
 
     @Test
-    public void shouldThrowWhenStatusCodeIsNot200()
+    void shouldThrowWhenStatusCodeIsNot200()
     {
         when(sdkHttpMetadataMock.statusCode()).thenReturn(503);
         when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenReturn(getGetParameterResponse());
@@ -101,7 +101,7 @@ public class ParameterStoreSourceTest
     }
 
     @Test
-    public void shouldThrowWhenParameterIsNull()
+    void shouldThrowWhenParameterIsNull()
     {
         when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenReturn(getGetParameterResponse());
         ParameterStoreSource parameterStoreSourceHaltingBoot = new ParameterStoreSource(ssmClientMock, true);
@@ -110,7 +110,7 @@ public class ParameterStoreSourceTest
     }
 
     @Test
-    public void shouldThrowWhenParameterValueIsNull()
+    void shouldThrowWhenParameterValueIsNull()
     {
         when(ssmClientMock.getParameter(getParameterRequest(VALID_PROPERTY_NAME))).thenReturn(getGetParameterResponse().toBuilder()
                                                                                                                        .parameter((Parameter.builder()
