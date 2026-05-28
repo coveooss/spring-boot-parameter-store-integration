@@ -30,8 +30,7 @@
       "name": "awsParameterStoreSource.ssmClient.endpointConfiguration.signingRegion",
       "sourceType": "com.coveo.configuration.parameterstore.ParameterStorePropertySourceConfigurationProperties",
       "description": "The AWS region to use for signing requests to the SSM endpoint. If not specified, the client will use the default region configured for the application.",
-      "type": "java.lang.String",
-      "defaultValue": "us-east-1"
+      "type": "java.lang.String"
     },
     {
       "name": "awsParameterStoreSource.multiRegion.ssmClient.regions",
