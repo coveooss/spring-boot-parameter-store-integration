@@ -1,14 +1,15 @@
 package com.coveo.configuration.parameterstore;
 
+import java.util.Objects;
+
 import com.coveo.configuration.parameterstore.exception.ParameterStoreError;
 import com.coveo.configuration.parameterstore.exception.ParameterStoreParameterNotFoundError;
+
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.awssdk.services.ssm.model.ParameterVersionNotFoundException;
-
-import java.util.Objects;
 
 public class ParameterStoreSource
 {

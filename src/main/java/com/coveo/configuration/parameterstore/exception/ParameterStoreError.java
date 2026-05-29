@@ -1,7 +1,10 @@
 package com.coveo.configuration.parameterstore.exception;
 
+import java.io.Serial;
+
 public class ParameterStoreError extends Error
 {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public ParameterStoreError(String propertyName, String reason)

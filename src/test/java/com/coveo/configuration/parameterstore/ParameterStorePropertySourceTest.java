@@ -1,7 +1,10 @@
 package com.coveo.configuration.parameterstore;
 
-import static com.google.common.truth.Truth.*;
-import static org.mockito.Mockito.*;
+import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class ParameterStorePropertySourceTest
+class ParameterStorePropertySourceTest
 {
     private static final String VALID_PROPERTY_NAME = "/validproperty";
     private static final String VALID_VALUE = "myvalidvalue";
@@ -21,13 +24,13 @@ public class ParameterStorePropertySourceTest
     private ParameterStorePropertySource parameterStorePropertySource;
 
     @BeforeEach
-    public void setUp()
+    void setUp()
     {
         parameterStorePropertySource = new ParameterStorePropertySource("someuselessname", parameterStoreSourceMock);
     }
 
     @Test
-    public void testGetPropertyReturnsNullWithoutPingingParameterStoreIfPrefixIsNotPresent()
+    void testGetPropertyReturnsNullWithoutPingingParameterStoreIfPrefixIsNotPresent()
     {
         Object value = parameterStorePropertySource.getProperty("somepropswithoutslashbefore");
 
@@ -36,7 +39,7 @@ public class ParameterStorePropertySourceTest
     }
 
     @Test
-    public void testGetProperty()
+    void testGetProperty()
     {
         when(parameterStoreSourceMock.getProperty(VALID_PROPERTY_NAME)).thenReturn(VALID_VALUE);
 
