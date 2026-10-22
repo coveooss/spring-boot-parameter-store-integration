@@ -32,6 +32,7 @@ jobs:
     outputs:
       version: ${{ steps.vars.outputs.version }}
       tag: ${{ steps.vars.outputs.tag }}
+      sha: ${{ steps.ref.outputs.sha }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
@@ -41,10 +42,10 @@ jobs:
       - name: Validate version format
         id: vars
         shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-
-          VERSION="${{ inputs.version }}"
 
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Invalid version: $VERSION"
@@ -62,13 +63,17 @@ jobs:
           fetch-depth: 0
 
       - name: Validate git ref
+        id: ref
         shell: bash
         run: |
+          set -euo pipefail
           git fetch origin main
           if ! git merge-base --is-ancestor HEAD origin/main; then
             echo "::error::Release tag must point to a commit on the main branch (or an ancestor of it)"
             exit 1
           fi
+          # Later jobs check out this exact commit: the input ref may move after validation.
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Verify tag does not already exist
         shell: bash
@@ -97,7 +102,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.validate.outputs.sha }}
 
       - name: Set up Java
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -125,7 +130,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.validate.outputs.sha }}
 
       - name: Set up Java for publishing
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -165,7 +170,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.validate.outputs.sha }}
 
       - name: Configure git identity
         run: |
